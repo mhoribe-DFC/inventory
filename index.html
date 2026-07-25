@@ -387,13 +387,17 @@ function openItem(){
   document.getElementById('confirm-label').textContent = m.confirm;
   qty = 1; document.getElementById('manual-id').value=''; updateQty(); show('item');
 }
-function roundQ(n){ return Math.round((Number(n)||0)*1000)/1000; }   // 小数(長さ/重さ)対応・誤差抑制
+function decs_(){ return (current && current.decimals != null) ? current.decimals : 0; }   // 品目ごとの小数桁数
+function roundQ(n){ var f = Math.pow(10, decs_()); return Math.round((Number(n)||0)*f)/f; }
+function countDec_(s){ s = String(s); var i = s.indexOf('.'); return i < 0 ? 0 : (s.length - i - 1); }
 function stepQty(d){ qty = roundQ(Math.max((MODE==='棚卸'?0:1), qty + d)); updateQty(); }
 function editQty(){
-  var v = prompt((MODE==='棚卸'?'実数を入力（小数可）':'数量を入力（小数可）'), '');
+  var d = decs_();
+  var v = prompt((MODE==='棚卸'?'実数を入力':'数量を入力') + (d>0 ? ('（小数第'+d+'位まで）') : '（整数のみ）'), '');
   if (v===null || v.trim()==='') return;
-  var n = parseFloat(v);
+  var s = v.trim(), n = parseFloat(s);
   if (isNaN(n) || n<0) { toast('数値を入力してください'); return; }
+  if (countDec_(s) > d) { toast(d===0 ? 'この品目は整数で入力してください' : ('小数第'+d+'位まで入力できます')); return; }
   if (MODE!=='棚卸' && n<=0) { toast('0より大きい数を入力してください'); return; }
   qty = roundQ(n); updateQty();
 }
