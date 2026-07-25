@@ -1,0 +1,16 @@
+{
+  "name": "在庫管理",
+  "short_name": "在庫管理",
+  "description": "QRを読み取って在庫を記録する社内アプリ",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0E7C86",
+  "theme_color": "#0E7C86",
+  "lang": "ja",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

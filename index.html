@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0E7C86">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="在庫管理">
+<title>在庫管理</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="icon" href="icon.svg">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css">
+<style>
+  :root{
+    --bg:#F6F8FA; --card:#FFFFFF; --ink:#141A20; --ink2:#59636E; --line:#E4E9EE; --line2:#D3DAE1;
+    --accent:#0E7C86; --accent-d:#0A5A62; --accent-soft:#DDF0F1;
+    --ok:#1F7A52; --ok-soft:#E1F1E9; --warn:#B26A06; --warn-soft:#FBEBD4; --bad:#B23A2E; --bad-soft:#F8E2DE;
+    --font:"Hiragino Kaku Gothic ProN","Hiragino Sans","BIZ UDPGothic","Yu Gothic","Meiryo",system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  body{font-family:var(--font);color:var(--ink);background:var(--bg);overflow:hidden;}
+  #app{height:100dvh;display:flex;flex-direction:column;}
+  .hidden{display:none !important;}
+  .num{font-family:var(--mono);font-variant-numeric:tabular-nums;}
+  .muted{color:var(--ink2);} .sm{font-size:13px;} .tiny{font-size:11px;}
+  .appbar{background:var(--accent);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;flex:none;padding-top:max(14px,env(safe-area-inset-top));}
+  .appbar .t{font-size:16px;font-weight:600;}
+  .appbar .ic{font-size:20px;background:none;border:0;color:#fff;padding:4px;cursor:pointer;}
+  .appbar .spacer{flex:1;}
+  .content{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;}
+  .center{justify-content:center;align-items:center;text-align:center;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#fff;font-weight:600;font-size:16px;padding:15px;border-radius:12px;width:100%;border:0;cursor:pointer;font-family:var(--font);}
+  .btn:active{transform:scale(.99);}
+  .btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--line2);}
+  .btn.ok{background:var(--ok);} .btn.warn{background:var(--warn);} .btn.bad{background:var(--bad);}
+  .pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;}
+  .p-use{background:var(--accent-soft);color:var(--accent-d);}
+  .p-in{background:var(--ok-soft);color:var(--ok);}
+  .p-count{background:var(--warn-soft);color:var(--warn);}
+  .p-cancel{background:var(--bad-soft);color:var(--bad);}
+
+  #view-cam{flex:1;position:relative;background:#0d1418;display:flex;flex-direction:column;overflow:hidden;}
+  #reader{position:absolute;inset:0;}
+  #reader video{width:100%!important;height:100%!important;object-fit:cover;}
+  .cam-top{position:relative;z-index:3;display:flex;align-items:center;justify-content:space-between;padding:14px;padding-top:max(14px,env(safe-area-inset-top));}
+  .modechip{display:inline-flex;align-items:center;gap:7px;background:var(--accent);color:#fff;font-size:14px;font-weight:700;padding:9px 15px;border-radius:999px;box-shadow:0 2px 10px rgba(0,0,0,.35);}
+  .gear{width:48px;height:48px;border-radius:50%;background:#fff;color:var(--accent-d);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.35);}
+  .gear:active{background:var(--accent-soft);}
+  .cam-frame{position:relative;z-index:2;flex:1;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+  .fr{position:relative;width:64vw;max-width:260px;aspect-ratio:1;}
+  .fr span{position:absolute;width:34px;height:34px;}
+  .fr .tl{top:0;left:0;border-top:3px solid #fff;border-left:3px solid #fff;border-radius:13px 0 0 0;}
+  .fr .tr{top:0;right:0;border-top:3px solid #fff;border-right:3px solid #fff;border-radius:0 13px 0 0;}
+  .fr .bl{bottom:0;left:0;border-bottom:3px solid #fff;border-left:3px solid #fff;border-radius:0 0 0 13px;}
+  .fr .br{bottom:0;right:0;border-bottom:3px solid #fff;border-right:3px solid #fff;border-radius:0 0 13px 0;}
+  .cam-hint{position:relative;z-index:3;text-align:center;padding:14px 16px 22px;color:#fff;font-size:14px;font-weight:600;}
+  .cam-hint small{display:block;color:#9fb3b8;font-weight:400;font-size:12px;margin-top:4px;}
+  .cam-manual{position:relative;z-index:3;padding:0 16px calc(18px + env(safe-area-inset-bottom));display:flex;gap:8px;}
+  .cam-manual input{flex:1;padding:12px;border-radius:10px;border:0;font-size:15px;font-family:var(--mono);}
+  .cam-manual button{background:rgba(255,255,255,.92);border:0;border-radius:10px;padding:0 16px;font-weight:700;color:var(--accent-d);cursor:pointer;}
+
+  .stepper{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .stepper button{width:60px;height:60px;border-radius:16px;border:1px solid var(--line2);background:var(--card);color:var(--accent);font-size:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .stepper .val{font-family:var(--mono);font-size:46px;font-weight:700;line-height:1;background:none;border:0;text-align:center;width:120px;cursor:pointer;color:var(--accent);}
+  .taphint{font-size:11px;color:var(--accent);border:1px solid var(--line2);border-radius:999px;padding:3px 10px;margin-top:8px;display:inline-block;}
+
+  .list-row{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid var(--line);}
+  .thumb{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex:none;font-weight:700;}
+
+  .sheet{position:fixed;inset:0;z-index:20;background:rgba(6,10,12,.5);display:flex;flex-direction:column;justify-content:flex-end;}
+  .sheet-card{background:var(--card);border-radius:20px 20px 0 0;padding:8px 16px calc(24px + env(safe-area-inset-bottom));}
+  .grab{width:40px;height:4px;border-radius:2px;background:var(--line2);margin:6px auto 12px;}
+  .sheet-card h4{font-size:13px;color:var(--ink2);margin:0 0 4px;}
+  .modeitem{display:flex;align-items:center;gap:13px;padding:14px 4px;border-bottom:1px solid var(--line);cursor:pointer;}
+  .modeitem:last-child{border-bottom:0;}
+  .mi{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;flex:none;}
+  .mt{flex:1;font-size:15px;font-weight:600;}
+  .chk{color:var(--accent);font-size:20px;}
+
+  .permwrap{position:fixed;inset:0;z-index:30;background:rgba(10,14,17,.6);display:flex;align-items:center;justify-content:center;padding:24px;}
+  .permcard{background:var(--card);border-radius:20px;padding:26px 22px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.3);}
+  .permicon{width:72px;height:72px;border-radius:50%;background:var(--accent-soft);color:var(--accent-d);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 14px;}
+  .permtitle{font-size:18px;font-weight:700;margin-bottom:8px;}
+  .permmsg{font-size:14px;color:var(--ink2);line-height:1.6;margin-bottom:20px;}
+  .permcard .btn{margin-bottom:10px;} .permcard .btn:last-child{margin-bottom:0;}
+
+  .check{width:88px;height:88px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:flex;align-items:center;justify-content:center;font-size:46px;margin:0 auto;}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#222;color:#fff;padding:12px 18px;border-radius:10px;font-size:14px;z-index:40;max-width:90%;text-align:center;}
+  .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;margin:0 auto;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+  .banner{display:flex;gap:9px;align-items:flex-start;background:var(--warn-soft);border-radius:12px;padding:12px;}
+  .banner .i{color:var(--warn);font-size:17px;flex:none;} .banner .txt{font-size:13px;line-height:1.5;}
+  .brand{width:76px;height:76px;border-radius:20px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:38px;margin:0 auto;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- CONFIG NEEDED -->
+  <div id="view-config" class="content center hidden">
+    <i class="ti ti-settings-exclamation" style="font-size:44px;color:var(--warn);"></i>
+    <div style="font-weight:700;">設定が未完了です</div>
+    <div class="muted sm" style="line-height:1.6;">index.html 冒頭の <b>API_URL</b> と <b>CLIENT_ID</b> を設定してください。<br>（セットアップ手順_v2.md 参照）</div>
+  </div>
+
+  <!-- SIGN IN -->
+  <div id="view-signin" class="content center hidden" style="gap:18px;">
+    <div class="brand"><i class="ti ti-packages"></i></div>
+    <div><div style="font-size:20px;font-weight:700;">在庫管理</div><div class="sm muted" style="margin-top:4px;">会社のGoogleアカウントでログイン</div></div>
+    <div id="gbtn"></div>
+    <div class="banner" style="background:var(--accent-soft);max-width:320px;"><span class="i" style="color:var(--accent-d);"><i class="ti ti-lock"></i></span><span class="txt">@dfc-kyoto.co.jp のアカウントのみ利用できます</span></div>
+  </div>
+
+  <!-- LOADING -->
+  <div id="view-loading" class="content center">
+    <div class="spin"></div><div class="muted sm">読み込み中…</div>
+  </div>
+
+  <!-- AUTH ERROR -->
+  <div id="view-auth" class="content center hidden">
+    <i class="ti ti-lock" style="font-size:44px;color:var(--bad);"></i>
+    <div style="font-weight:700;">ログインできません</div>
+    <div class="muted sm" id="auth-msg"></div>
+    <button class="btn ghost" style="max-width:240px;" onclick="showSignin()">ログイン画面へ</button>
+  </div>
+
+  <!-- CAMERA -->
+  <div id="view-cam" class="hidden">
+    <div class="cam-top">
+      <span class="modechip"><i class="ti ti-minus" id="mode-icon"></i><span id="mode-label">使用モード</span></span>
+      <button class="gear" onclick="openSheet()" aria-label="モード切替"><i class="ti ti-settings"></i></button>
+    </div>
+    <div id="reader"></div>
+    <div class="cam-frame"><div class="fr"><span class="tl"></span><span class="tr"></span><span class="bl"></span><span class="br"></span></div></div>
+    <div class="cam-hint">品目QRを枠内に合わせてください<small>読み取ると自動で次へ進みます</small></div>
+    <div class="cam-manual">
+      <input id="manual-id" placeholder="ITEM-0001（手入力）" autocomplete="off">
+      <button onclick="manualLookup()">照会</button>
+    </div>
+  </div>
+
+  <!-- ITEM / QTY -->
+  <div id="view-item" class="hidden" style="flex:1;display:flex;flex-direction:column;">
+    <div class="appbar"><button class="ic" onclick="backToCam()"><i class="ti ti-arrow-left"></i></button><span class="t" id="item-title">使用数を入力</span></div>
+    <div class="content">
+      <div class="card">
+        <div class="row"><span class="tiny num muted" id="i-id">ITEM-0000</span><span class="pill" id="i-pill">使用</span></div>
+        <div style="font-size:17px;font-weight:700;margin:6px 0 2px;" id="i-name">—</div>
+        <div class="sm muted" id="i-loc"></div>
+        <div class="row" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px;">
+          <span class="sm muted" id="i-stocklabel">現在の在庫</span>
+          <span class="num" style="font-size:22px;font-weight:700;"><span id="i-stock">0</span> <span class="sm muted" id="i-unit">個</span></span>
+        </div>
+      </div>
+      <div class="stepper">
+        <button onclick="stepQty(-1)">−</button>
+        <input class="val" id="qty" type="text" inputmode="numeric" value="1" readonly onclick="editQty()">
+        <button onclick="stepQty(1)">＋</button>
+      </div>
+      <div style="text-align:center;"><span class="taphint" onclick="editQty()"><i class="ti ti-hand-finger"></i> 数字をタップで直接入力</span></div>
+      <div class="card row" style="padding:12px 16px;">
+        <span class="sm muted" id="i-afterlabel">減算後の在庫</span>
+        <span class="num" id="i-after" style="font-size:17px;font-weight:700;color:var(--ok);">0 個</span>
+      </div>
+      <div id="i-warn" class="banner hidden" style="background:var(--bad-soft);"><span class="i" style="color:var(--bad);"><i class="ti ti-alert-triangle"></i></span><span class="txt" id="i-warn-txt"></span></div>
+      <button class="btn" id="confirm-btn" onclick="confirmTx()"><i class="ti ti-check"></i> <span id="confirm-label">確定して減算</span></button>
+    </div>
+  </div>
+
+  <!-- DONE -->
+  <div id="view-done" class="content center hidden">
+    <div class="check"><i class="ti ti-check"></i></div>
+    <div><div style="font-size:18px;font-weight:700;">記録しました</div><div class="sm muted" id="done-detail" style="margin-top:6px;line-height:1.5;"></div></div>
+    <div class="card" style="width:100%;"><div class="row"><span class="sm muted">現在の在庫</span><span class="num" id="done-stock" style="font-size:20px;font-weight:700;"></span></div></div>
+    <div id="done-low" class="banner hidden"><span class="i"><i class="ti ti-alert-triangle"></i></span><span class="txt" id="done-low-txt"></span></div>
+    <button class="btn" onclick="backToCam()"><i class="ti ti-camera"></i> 続けて読み取る</button>
+  </div>
+
+  <!-- LIST -->
+  <div id="view-list" class="hidden" style="flex:1;display:flex;flex-direction:column;">
+    <div class="appbar"><button class="ic" onclick="backToCam()"><i class="ti ti-arrow-left"></i></button><span class="t" id="list-title">履歴</span><span class="spacer"></span><button class="ic" onclick="reloadList()"><i class="ti ti-refresh"></i></button></div>
+    <div class="content" id="list-body"></div>
+  </div>
+
+</div>
+
+<!-- CAMERA PERMISSION POPUP -->
+<div id="perm" class="permwrap hidden">
+  <div class="permcard">
+    <div class="permicon"><i class="ti ti-camera" id="perm-icon"></i></div>
+    <div class="permtitle" id="perm-title">カメラの使用を許可</div>
+    <div class="permmsg" id="perm-msg">QRコードを読み取るためにカメラを使用します。次に表示される確認で「許可」を選んでください。</div>
+    <button class="btn" id="perm-btn" onclick="requestCam()"><i class="ti ti-camera"></i> <span id="perm-btn-label">カメラを許可する</span></button>
+    <button class="btn ghost" onclick="closePerm()">あとで（手入力で照会）</button>
+  </div>
+</div>
+
+<!-- MODE SHEET -->
+<div id="sheet" class="sheet hidden" onclick="if(event.target===this)closeSheet()">
+  <div class="sheet-card">
+    <div class="grab"></div>
+    <h4 id="sheet-user">モードを選択</h4>
+    <div class="modeitem" onclick="selectMode('使用')"><span class="mi p-use"><i class="ti ti-minus"></i></span><span class="mt">使用（在庫を減らす）</span><i class="ti ti-check chk mode-chk" data-m="使用"></i></div>
+    <div class="modeitem" onclick="selectMode('入庫')"><span class="mi p-in"><i class="ti ti-plus"></i></span><span class="mt">入庫（在庫を増やす）</span><i class="ti ti-check chk mode-chk hidden" data-m="入庫"></i></div>
+    <div class="modeitem" onclick="selectMode('棚卸')"><span class="mi p-count"><i class="ti ti-clipboard-check"></i></span><span class="mt">棚卸し（実数に補正）</span><i class="ti ti-check chk mode-chk hidden" data-m="棚卸"></i></div>
+    <div class="modeitem" onclick="showList('history')"><span class="mi" style="background:var(--line);color:var(--ink2);"><i class="ti ti-history"></i></span><span class="mt">履歴</span></div>
+    <div class="modeitem" onclick="showList('alerts')"><span class="mi" style="background:var(--line);color:var(--ink2);"><i class="ti ti-bell"></i></span><span class="mt">発注点アラート</span></div>
+    <div class="modeitem" onclick="signOut()"><span class="mi" style="background:var(--bad-soft);color:var(--bad);"><i class="ti ti-logout"></i></span><span class="mt">ログアウト</span></div>
+  </div>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+/* ====================== 設定（ここを書き換える） ====================== */
+var API_URL   = 'PASTE_GAS_WEB_APP_URL';                 // GASウェブアプリの /exec URL
+var CLIENT_ID = 'PASTE_OAUTH_CLIENT_ID';                 // OAuthクライアントID
+/* ==================================================================== */
+
+var MODE = '使用';
+var MODE_META = {
+  '使用': { pill:'p-use',   title:'使用数を入力', confirm:'確定して減算', afterLabel:'減算後の在庫', icon:'ti-minus',           btn:'' },
+  '入庫': { pill:'p-in',    title:'入庫数を入力', confirm:'入庫を記録',   afterLabel:'入庫後の在庫', icon:'ti-plus',            btn:'ok' },
+  '棚卸': { pill:'p-count', title:'実数を入力',   confirm:'在庫を補正',   afterLabel:'補正後の在庫', icon:'ti-clipboard-check', btn:'warn' }
+};
+var current = null, qty = 1, scanner = null, busy = false;
+var ID_TOKEN = '', ME = '';
+
+/* ---------------- boot ---------------- */
+window.addEventListener('load', function () {
+  if (API_URL.indexOf('PASTE_') === 0 || CLIENT_ID.indexOf('PASTE_') === 0) { show('config'); return; }
+  var t = setInterval(function () {
+    if (window.google && google.accounts && google.accounts.id) { clearInterval(t); initSignin(); }
+  }, 100);
+});
+
+function initSignin(){
+  google.accounts.id.initialize({ client_id: CLIENT_ID, callback: onCredential, auto_select: true });
+  showSignin();
+  google.accounts.id.renderButton(document.getElementById('gbtn'), { theme:'filled_blue', size:'large', shape:'pill', text:'signin_with', locale:'ja' });
+  google.accounts.id.prompt();
+}
+
+function onCredential(resp){
+  ID_TOKEN = resp.credential;
+  ME = jwtField_(ID_TOKEN, 'email');
+  show('loading');
+  api('me', {}).then(function (r) {
+    ME = r.email || ME;
+    applyMode('使用');
+    show('cam'); showPerm();
+  }).catch(function (e) {
+    show('auth'); document.getElementById('auth-msg').textContent = e.message;
+  });
+}
+
+function showSignin(){ ID_TOKEN=''; show('signin'); }
+function signOut(){ closeSheet(); try{ google.accounts.id.disableAutoSelect(); }catch(e){} stopCam(); showSignin(); }
+
+/* ---------------- API ---------------- */
+function api(action, params){
+  return fetch(API_URL, { method:'POST', body: JSON.stringify({ action:action, params:params||{}, idToken: ID_TOKEN }) })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (!d.ok) {
+        if (/ログイン|トークン|有効期限/.test(d.error||'')) { showSignin(); }
+        throw new Error(d.error || 'エラーが発生しました');
+      }
+      return d.result;
+    });
+}
+
+/* ---------------- view switch ---------------- */
+function show(name){
+  ['config','signin','loading','auth','cam','item','done','list'].forEach(function(v){
+    document.getElementById('view-'+v).classList.toggle('hidden', v!==name);
+  });
+}
+
+/* ---------------- camera ---------------- */
+function showPerm(err){
+  var granted = !err;
+  document.getElementById('perm-icon').className = 'ti ' + (granted ? 'ti-camera' : 'ti-camera-off');
+  document.getElementById('perm-title').textContent = granted ? 'カメラの使用を許可' : 'カメラを使用できませんでした';
+  document.getElementById('perm-msg').innerHTML = granted
+    ? 'QRコードを読み取るためにカメラを使用します。次に表示される確認で「許可」を選んでください。'
+    : 'カメラへのアクセスが許可されていません。「再試行」で許可し直すか、ブラウザ設定でカメラを許可してください。手入力での照会もできます。';
+  document.getElementById('perm-btn-label').textContent = granted ? 'カメラを許可する' : '再試行する';
+  document.getElementById('perm').classList.remove('hidden');
+}
+function closePerm(){
+  document.getElementById('perm').classList.add('hidden');
+  document.querySelector('.cam-hint').innerHTML = '品目IDを手入力して照会できます<small>カメラを使うときは右上の歯車→カメラ再試行</small>';
+}
+function requestCam(){ document.getElementById('perm').classList.add('hidden'); startCam(); }
+function retryCam(){ closeSheet(); if (scanner) { resumeCam(); } else { showPerm(); } }
+
+function startCam(){
+  show('cam');
+  if (scanner) { resumeCam(); return; }
+  scanner = new Html5Qrcode('reader', { verbose:false });
+  scanner.start({ facingMode:'environment' }, { fps:10, qrbox:{width:230,height:230} }, onScan, function(){})
+    .then(function(){ document.getElementById('perm').classList.add('hidden'); })
+    .catch(function(err){ scanner = null; showPerm(err || true); });
+}
+function resumeCam(){ show('cam'); try{ scanner.resume(); }catch(e){} }
+function pauseCam(){ try{ scanner && scanner.pause(true); }catch(e){} }
+function stopCam(){ try{ scanner && scanner.stop(); }catch(e){} scanner=null; }
+
+function onScan(text){ if (busy) return; pauseCam(); lookup(text); }
+function manualLookup(){ var v=document.getElementById('manual-id').value.trim(); if (v) lookup(v); }
+
+/* ---------------- lookup ---------------- */
+function lookup(id){
+  busy = true; toast('照会中…', 800);
+  api('getItem', { itemId:id }).then(function (item) {
+    busy = false;
+    if (!item) { toast('未登録のQRです: ' + id); resumeCam(); return; }
+    current = item; openItem();
+  }).catch(function (e) { busy=false; toast(e.message); resumeCam(); });
+}
+
+/* ---------------- item / qty ---------------- */
+function openItem(){
+  var m = MODE_META[MODE];
+  document.getElementById('item-title').textContent = m.title;
+  document.getElementById('i-id').textContent = current.id;
+  var pill = document.getElementById('i-pill'); pill.textContent = MODE; pill.className = 'pill ' + m.pill;
+  document.getElementById('i-name').textContent = current.name;
+  document.getElementById('i-loc').innerHTML = current.location ? '<i class="ti ti-map-pin"></i> ' + current.location : '';
+  document.getElementById('i-stock').textContent = fmt(current.stock);
+  document.getElementById('i-unit').textContent = current.unit || '';
+  document.getElementById('i-stocklabel').textContent = (MODE==='棚卸') ? 'システム上の在庫' : '現在の在庫';
+  document.getElementById('i-afterlabel').textContent = (MODE==='棚卸') ? '差分' : m.afterLabel;
+  document.getElementById('confirm-label').textContent = m.confirm;
+  qty = 1; document.getElementById('manual-id').value=''; updateQty(); show('item');
+}
+function stepQty(d){ qty = Math.max(1, qty + d); updateQty(); }
+function editQty(){
+  var v = prompt((MODE==='棚卸'?'実数を入力':'数量を入力'), qty);
+  if (v===null) return;
+  var n = parseInt(v,10);
+  if (isNaN(n) || n<0) { toast('数値を入力してください'); return; }
+  qty = (MODE==='棚卸') ? n : Math.max(1,n); updateQty();
+}
+function updateQty(){
+  var el = document.getElementById('qty'); el.value = qty; el.style.color = 'var(--accent)';
+  var after, warn=false, warnTxt='';
+  if (MODE==='使用'){ after = current.stock - qty; if (after<0){ warn=true; warnTxt='在庫がマイナスになります（'+current.stock+' → '+after+'）。このまま記録もできます。'; el.style.color='var(--bad)'; } }
+  else if (MODE==='入庫'){ after = current.stock + qty; }
+  else { after = qty - current.stock; }
+  var afterEl = document.getElementById('i-after');
+  if (MODE==='棚卸'){ afterEl.textContent = (after>=0?'+':'') + fmt(after) + ' ' + (current.unit||''); afterEl.style.color = after<0?'var(--bad)':'var(--ok)'; }
+  else { afterEl.textContent = fmt(after) + ' ' + (current.unit||''); afterEl.style.color = (after<0?'var(--bad)':'var(--ok)'); }
+  document.getElementById('i-warn').classList.toggle('hidden', !warn);
+  document.getElementById('i-warn-txt').textContent = warnTxt;
+  var m = MODE_META[MODE];
+  document.getElementById('confirm-btn').className = 'btn ' + (warn ? 'bad' : (m.btn||''));
+}
+function confirmTx(){
+  if (busy) return; busy=true;
+  var btn=document.getElementById('confirm-btn'); btn.disabled=true;
+  api('record', { itemId: current.id, type: MODE, qty: qty }).then(function (res) {
+    busy=false; btn.disabled=false;
+    var word = (MODE==='棚卸') ? ('棚卸し（' + (res.delta>=0?'+':'') + res.delta + res.unit + '）') : (Math.abs(res.delta) + res.unit + ' ' + MODE);
+    document.getElementById('done-detail').innerHTML = esc(res.name) + '<br>を <b style="color:var(--ink)">' + word + '</b>';
+    document.getElementById('done-stock').textContent = fmt(res.newStock) + ' ' + res.unit;
+    document.getElementById('done-low').classList.toggle('hidden', !res.low);
+    document.getElementById('done-low-txt').textContent = res.low ? ('発注点（'+res.reorder+'）を下回っています。') : '';
+    show('done');
+  }).catch(function (e) { busy=false; btn.disabled=false; toast(e.message); });
+}
+function backToCam(){ current=null; startCam(); }
+
+/* ---------------- mode sheet ---------------- */
+function openSheet(){ document.getElementById('sheet-user').textContent = ME ? ME : 'モードを選択'; document.getElementById('sheet').classList.remove('hidden'); }
+function closeSheet(){ document.getElementById('sheet').classList.add('hidden'); }
+function selectMode(m){ applyMode(m); closeSheet(); startCam(); }
+function applyMode(m){
+  MODE = m; var meta = MODE_META[m];
+  document.getElementById('mode-label').textContent = m + 'モード';
+  document.getElementById('mode-icon').className = 'ti ' + meta.icon;
+  document.querySelectorAll('.mode-chk').forEach(function(c){ c.classList.toggle('hidden', c.getAttribute('data-m')!==m); });
+}
+
+/* ---------------- lists ---------------- */
+var listKind = 'history';
+function showList(kind){ listKind=kind; closeSheet(); pauseCam(); reloadList(); show('list'); }
+function reloadList(){
+  var body = document.getElementById('list-body');
+  document.getElementById('list-title').textContent = (listKind==='history') ? '履歴' : '発注点アラート';
+  body.innerHTML = '<div class="center" style="flex:1;display:flex;padding-top:40px;"><div class="spin"></div></div>';
+  if (listKind==='history') api('history',{limit:30}).then(renderHistory).catch(function(e){body.textContent=e.message;});
+  else api('alerts',{}).then(renderAlerts).catch(function(e){body.textContent=e.message;});
+}
+function renderHistory(rows){
+  var body = document.getElementById('list-body');
+  if (!rows.length){ body.innerHTML = '<div class="muted center" style="padding-top:40px;">履歴はまだありません</div>'; return; }
+  var pm={'使用':'p-use','入庫':'p-in','棚卸':'p-count','取消':'p-cancel'}, im={'使用':'ti-minus','入庫':'ti-plus','棚卸':'ti-clipboard-check','取消':'ti-arrow-back-up'};
+  body.innerHTML = rows.map(function(r){ var pc=pm[r.type]||'p-use';
+    return '<div class="list-row"><div class="thumb '+pc+'"><i class="ti '+(im[r.type]||'ti-minus')+'"></i></div><div style="flex:1;min-width:0;"><div class="sm" style="font-weight:600;">'+esc(r.name)+'</div><div class="tiny muted num">'+shortTime(r.time)+' · '+esc(shortUser(r.user))+'</div></div><div style="text-align:right;"><span class="pill '+pc+'">'+r.type+'</span><div class="num sm" style="margin-top:3px;">'+(r.qty>0?'+':'')+r.qty+'</div></div></div>';
+  }).join('');
+}
+function renderAlerts(rows){
+  var body = document.getElementById('list-body');
+  if (!rows.length){ body.innerHTML = '<div class="muted center" style="padding-top:40px;"><i class="ti ti-check" style="font-size:32px;color:var(--ok)"></i><div>発注点を下回る品目はありません</div></div>'; return; }
+  body.innerHTML = '<div class="banner"><span class="i"><i class="ti ti-alert-triangle"></i></span><span class="txt"><b>'+rows.length+'品目</b>が発注点を下回っています</span></div><div class="card" style="padding:0;">' +
+    rows.map(function(r){ return '<div class="list-row" style="padding:13px 14px;"><div style="flex:1;"><div class="sm" style="font-weight:600;">'+esc(r.name)+'</div><div class="tiny muted">発注点 '+r.reorder+' '+esc(r.unit||'')+'</div></div><div class="num" style="font-weight:700;color:var(--bad);">'+r.stock+'</div></div>'; }).join('') + '</div>';
+}
+
+/* ---------------- utils ---------------- */
+function jwtField_(t, f){ try{ return JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')))[f]||''; }catch(e){ return ''; } }
+function fmt(n){ return (Number(n)||0).toLocaleString('ja-JP'); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
+function shortUser(u){ return String(u||'').split('@')[0]; }
+function shortTime(t){ var m=String(t||'').match(/\d{4}-(\d{2}-\d{2})\s+(\d{2}:\d{2})/); return m ? (m[1]+' '+m[2]) : String(t||''); }
+var toastT;
+function toast(msg, ms){
+  clearTimeout(toastT);
+  var el=document.getElementById('toast');
+  if(!el){ el=document.createElement('div'); el.id='toast'; el.className='toast'; document.body.appendChild(el); }
+  el.textContent=msg; el.style.display='block';
+  toastT=setTimeout(function(){el.style.display='none';}, ms||2200);
+}
+
+/* ---------------- service worker ---------------- */
+if ('serviceWorker' in navigator) { window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
+</script>
+</body>
+</html>
