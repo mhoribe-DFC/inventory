@@ -64,7 +64,9 @@
   .cam-hint{text-align:center;color:#fff;font-size:13px;font-weight:600;}
   .cam-hint small{display:block;color:#cdd8db;font-weight:400;font-size:11px;margin-top:3px;}
   .cam-manual{display:flex;gap:8px;}
-  .cam-manual input{flex:1;padding:13px;border-radius:10px;border:0;font-size:15px;font-family:var(--mono);}
+  .idbox{flex:1;display:flex;align-items:center;background:#fff;border-radius:10px;padding:0 6px 0 13px;}
+  .idpre{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--ink2);}
+  .idbox input{flex:1;min-width:0;border:0;background:none;outline:none;padding:13px 4px;font-size:15px;font-family:var(--mono);}
   .cam-manual button{background:#fff;border:0;border-radius:10px;padding:0 18px;font-weight:700;color:var(--accent-d);cursor:pointer;font-size:15px;}
 
   .stepper{display:flex;align-items:center;justify-content:space-between;gap:12px;}
@@ -146,7 +148,7 @@
     <div class="cam-bottom">
       <div class="cam-hint">品目QRを枠内に合わせてください<small>読み取ると自動で次へ進みます</small></div>
       <div class="cam-manual">
-        <input id="manual-id" placeholder="品目IDを手入力（例 ITEM-0001）" autocomplete="off">
+        <div class="idbox"><span class="idpre">ITEM-</span><input id="manual-id" inputmode="numeric" placeholder="0001" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'')"></div>
         <button onclick="manualLookup()">照会</button>
       </div>
     </div>
@@ -322,7 +324,7 @@ function startCam(){
   show('cam');
   if (scanner) { resumeCam(); return; }
   scanner = new Html5Qrcode('reader', { verbose:false });
-  scanner.start({ facingMode:'environment' }, { fps:10, qrbox:{width:230,height:230} }, onScan, function(){})
+  scanner.start({ facingMode:'environment' }, { fps:10 }, onScan, function(){})
     .then(function(){ document.getElementById('perm').classList.add('hidden'); })
     .catch(function(err){ scanner = null; showPerm(err || true); });
 }
@@ -331,7 +333,12 @@ function pauseCam(){ try{ scanner && scanner.pause(true); }catch(e){} }
 function stopCam(){ try{ scanner && scanner.stop(); }catch(e){} scanner=null; }
 
 function onScan(text){ if (busy) return; pauseCam(); lookup(text); }
-function manualLookup(){ var v=document.getElementById('manual-id').value.trim(); if (v) lookup(v); }
+function manualLookup(){
+  var d = document.getElementById('manual-id').value.replace(/[^0-9]/g,'');
+  if (!d) { toast('番号を入力してください'); return; }
+  while (d.length < 4) d = '0' + d;   // ITEM-0001 の形に0埋め
+  lookup('ITEM-' + d);
+}
 
 /* ---------------- lookup ---------------- */
 function lookup(id){
@@ -360,8 +367,8 @@ function openItem(){
 }
 function stepQty(d){ qty = Math.max(1, qty + d); updateQty(); }
 function editQty(){
-  var v = prompt((MODE==='棚卸'?'実数を入力':'数量を入力'), qty);
-  if (v===null) return;
+  var v = prompt((MODE==='棚卸'?'実数を入力':'数量を入力'), '');
+  if (v===null || v.trim()==='') return;
   var n = parseInt(v,10);
   if (isNaN(n) || n<0) { toast('数値を入力してください'); return; }
   qty = (MODE==='棚卸') ? n : Math.max(1,n); updateQty();
