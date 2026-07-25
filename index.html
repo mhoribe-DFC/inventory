@@ -99,6 +99,10 @@
   .banner{display:flex;gap:9px;align-items:flex-start;background:var(--warn-soft);border-radius:12px;padding:12px;}
   .banner .i{color:var(--warn);font-size:17px;flex:none;} .banner .txt{font-size:13px;line-height:1.5;}
   .brand{width:76px;height:76px;border-radius:20px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:38px;margin:0 auto;}
+  .busy-ov{position:fixed;inset:0;z-index:60;background:rgba(8,12,15,.38);display:flex;align-items:center;justify-content:center;}
+  .busy-box{background:var(--card);border-radius:16px;padding:22px 30px;display:flex;flex-direction:column;align-items:center;gap:13px;box-shadow:0 14px 34px rgba(0,0,0,.28);}
+  .busy-box .spin{width:42px;height:42px;border-width:4px;}
+  .busy-box .lbl{font-size:14px;font-weight:600;color:var(--ink);}
 </style>
 </head>
 <body>
@@ -193,6 +197,11 @@
 
 </div>
 
+<!-- BUSY OVERLAY（処理中・操作ブロック） -->
+<div id="busy" class="busy-ov hidden">
+  <div class="busy-box"><div class="spin"></div><div class="lbl" id="busy-label">処理中…</div></div>
+</div>
+
 <!-- CAMERA PERMISSION POPUP -->
 <div id="perm" class="permwrap hidden">
   <div class="permcard">
@@ -280,6 +289,10 @@ function api(action, params){
     });
 }
 
+/* ---------------- busy overlay ---------------- */
+function showBusy(msg){ document.getElementById('busy-label').textContent = msg || '処理中…'; document.getElementById('busy').classList.remove('hidden'); }
+function hideBusy(){ document.getElementById('busy').classList.add('hidden'); }
+
 /* ---------------- view switch ---------------- */
 function show(name){
   ['config','signin','loading','auth','cam','item','done','list'].forEach(function(v){
@@ -322,12 +335,12 @@ function manualLookup(){ var v=document.getElementById('manual-id').value.trim()
 
 /* ---------------- lookup ---------------- */
 function lookup(id){
-  busy = true; toast('照会中…', 800);
+  busy = true; showBusy('照会中…');
   api('getItem', { itemId:id }).then(function (item) {
-    busy = false;
+    busy = false; hideBusy();
     if (!item) { toast('未登録のQRです: ' + id); resumeCam(); return; }
     current = item; openItem();
-  }).catch(function (e) { busy=false; toast(e.message); resumeCam(); });
+  }).catch(function (e) { busy=false; hideBusy(); toast(e.message); resumeCam(); });
 }
 
 /* ---------------- item / qty ---------------- */
@@ -370,15 +383,16 @@ function updateQty(){
 function confirmTx(){
   if (busy) return; busy=true;
   var btn=document.getElementById('confirm-btn'); btn.disabled=true;
+  showBusy((MODE==='棚卸'?'補正を記録中…':(MODE==='入庫'?'入庫を記録中…':'記録中…')));
   api('record', { itemId: current.id, type: MODE, qty: qty }).then(function (res) {
-    busy=false; btn.disabled=false;
+    busy=false; btn.disabled=false; hideBusy();
     var word = (MODE==='棚卸') ? ('棚卸し（' + (res.delta>=0?'+':'') + res.delta + res.unit + '）') : (Math.abs(res.delta) + res.unit + ' ' + MODE);
     document.getElementById('done-detail').innerHTML = esc(res.name) + '<br>を <b style="color:var(--ink)">' + word + '</b>';
     document.getElementById('done-stock').textContent = fmt(res.newStock) + ' ' + res.unit;
     document.getElementById('done-low').classList.toggle('hidden', !res.low);
     document.getElementById('done-low-txt').textContent = res.low ? ('発注点（'+res.reorder+'）を下回っています。') : '';
     show('done');
-  }).catch(function (e) { busy=false; btn.disabled=false; toast(e.message); });
+  }).catch(function (e) { busy=false; btn.disabled=false; hideBusy(); toast(e.message); });
 }
 function backToCam(){ current=null; startCam(); }
 
