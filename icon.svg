@@ -1,16 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#0E7C86"/>
-  <g fill="none" stroke="#ffffff" stroke-width="26" stroke-linejoin="round" stroke-linecap="round">
+  <rect width="512" height="512" rx="112" fill="#E5322C"/>
+  <g fill="none" stroke="#ffffff" stroke-width="17" stroke-linejoin="round" stroke-linecap="round">
     <path d="M256 128 L372 190 L372 322 L256 384 L140 322 L140 190 Z"/>
     <path d="M140 190 L256 252 L372 190"/>
     <path d="M256 252 L256 384"/>
   </g>
-  <rect x="212" y="300" width="88" height="88" rx="10" fill="#ffffff"/>
-  <g fill="#0E7C86">
-    <rect x="224" y="312" width="20" height="20"/>
-    <rect x="268" y="312" width="20" height="20"/>
-    <rect x="224" y="356" width="20" height="20"/>
-    <rect x="252" y="340" width="12" height="12"/>
-    <rect x="276" y="356" width="12" height="12"/>
+  <g fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="108" text-anchor="middle" dominant-baseline="central">
+    <text transform="matrix(0.881,0.471,0,1,198,287)">D</text>
+    <text transform="matrix(0.881,0.471,-0.881,0.471,256,190)">F</text>
+    <text transform="matrix(0.881,-0.471,0,1,314,287)">C</text>
   </g>
 </svg>
