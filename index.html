@@ -373,7 +373,12 @@ function openItem(){
   document.getElementById('i-id').textContent = current.id;
   var pill = document.getElementById('i-pill'); pill.textContent = MODE; pill.className = 'pill ' + m.pill;
   document.getElementById('i-name').textContent = current.name;
-  document.getElementById('i-loc').innerHTML = current.location ? '<i class="ti ti-map-pin"></i> ' + current.location : '';
+  var meta = [];
+  if (current.active === false) meta.push('<span style="color:var(--bad);font-weight:700;">● 無効の品目</span>');
+  if (current.model)    meta.push('型番: ' + esc(current.model));
+  if (current.location) meta.push('<i class="ti ti-map-pin"></i> ' + esc(current.location));
+  if (current.supplier) meta.push('発注先: ' + esc(current.supplier));
+  document.getElementById('i-loc').innerHTML = meta.join(' ・ ');
   document.getElementById('i-stock').textContent = fmt(current.stock);
   document.getElementById('i-unit').textContent = current.unit || '';
   document.getElementById('i-stocklabel').textContent = (MODE==='棚卸') ? 'システム上の在庫' : '現在の在庫';
@@ -381,20 +386,22 @@ function openItem(){
   document.getElementById('confirm-label').textContent = m.confirm;
   qty = 1; document.getElementById('manual-id').value=''; updateQty(); show('item');
 }
-function stepQty(d){ qty = Math.max(1, qty + d); updateQty(); }
+function roundQ(n){ return Math.round((Number(n)||0)*1000)/1000; }   // 小数(長さ/重さ)対応・誤差抑制
+function stepQty(d){ qty = roundQ(Math.max((MODE==='棚卸'?0:1), qty + d)); updateQty(); }
 function editQty(){
-  var v = prompt((MODE==='棚卸'?'実数を入力':'数量を入力'), '');
+  var v = prompt((MODE==='棚卸'?'実数を入力（小数可）':'数量を入力（小数可）'), '');
   if (v===null || v.trim()==='') return;
-  var n = parseInt(v,10);
+  var n = parseFloat(v);
   if (isNaN(n) || n<0) { toast('数値を入力してください'); return; }
-  qty = (MODE==='棚卸') ? n : Math.max(1,n); updateQty();
+  if (MODE!=='棚卸' && n<=0) { toast('0より大きい数を入力してください'); return; }
+  qty = roundQ(n); updateQty();
 }
 function updateQty(){
   var el = document.getElementById('qty'); el.value = qty; el.style.color = 'var(--accent-d)';
   var after, warn=false, warnTxt='';
-  if (MODE==='使用'){ after = current.stock - qty; if (after<0){ warn=true; warnTxt='在庫がマイナスになります（'+current.stock+' → '+after+'）。このまま記録もできます。'; el.style.color='var(--bad)'; } }
-  else if (MODE==='入庫'){ after = current.stock + qty; }
-  else { after = qty - current.stock; }
+  if (MODE==='使用'){ after = roundQ(current.stock - qty); if (after<0){ warn=true; warnTxt='在庫がマイナスになります（'+fmt(current.stock)+' → '+fmt(after)+'）。このまま記録もできます。'; el.style.color='var(--bad)'; } }
+  else if (MODE==='入庫'){ after = roundQ(current.stock + qty); }
+  else { after = roundQ(qty - current.stock); }
   var afterEl = document.getElementById('i-after');
   if (MODE==='棚卸'){ afterEl.textContent = (after>=0?'+':'') + fmt(after) + ' ' + (current.unit||''); afterEl.style.color = after<0?'var(--bad)':'var(--ok)'; }
   else { afterEl.textContent = fmt(after) + ' ' + (current.unit||''); afterEl.style.color = (after<0?'var(--bad)':'var(--ok)'); }
