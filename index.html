@@ -15,7 +15,7 @@
 <style>
   :root{
     --bg:#F6F8FA; --card:#FFFFFF; --ink:#141A20; --ink2:#59636E; --line:#E4E9EE; --line2:#D3DAE1;
-    --accent:#FBE3E1; --accent-d:#B4241E; --accent-soft:#FBE3E1;
+    --accent:#E7EFF8; --accent-d:#1E4E82; --accent-soft:#E7EFF8;
     --ok:#1F7A52; --ok-soft:#E1F1E9; --warn:#B26A06; --warn-soft:#FBEBD4; --bad:#B23A2E; --bad-soft:#F8E2DE;
     --font:"Hiragino Kaku Gothic ProN","Hiragino Sans","BIZ UDPGothic","Yu Gothic","Meiryo",system-ui,sans-serif;
     --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
@@ -42,7 +42,7 @@
   .btn.ghost{background:transparent;color:var(--accent-d);border:1px solid var(--line2);}
   .btn.ok{background:var(--ok);color:#fff;} .btn.warn{background:var(--warn);color:#fff;} .btn.bad{background:var(--bad);color:#fff;}
   .pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;}
-  .p-use{background:#FBE3E1;color:#B4241E;}
+  .p-use{background:#E7EFF8;color:#1E4E82;}
   .p-in{background:var(--ok-soft);color:var(--ok);}
   .p-count{background:var(--warn-soft);color:var(--warn);}
   .p-cancel{background:var(--bad-soft);color:var(--bad);}
@@ -224,8 +224,8 @@
     <div class="modeitem" onclick="selectMode('入庫')"><span class="mi p-in"><i class="ti ti-plus"></i></span><span class="mt">入庫（在庫を増やす）</span><i class="ti ti-check chk mode-chk hidden" data-m="入庫"></i></div>
     <div class="modeitem" onclick="selectMode('棚卸')"><span class="mi p-count"><i class="ti ti-clipboard-check"></i></span><span class="mt">棚卸し（実数に補正）</span><i class="ti ti-check chk mode-chk hidden" data-m="棚卸"></i></div>
     <div class="menu-sep"></div>
-    <div class="modeitem" onclick="showList('history')"><span class="mi" style="background:#E7EFF8;color:#1E4E82;"><i class="ti ti-history"></i></span><span class="mt">履歴</span></div>
-    <div class="modeitem" onclick="showList('alerts')"><span class="mi" style="background:#FBEBD4;color:#B26A06;"><i class="ti ti-bell"></i></span><span class="mt">発注点アラート</span></div>
+    <div class="modeitem" onclick="showList('history')"><span class="mi" style="background:#FCF4D6;color:#856A09;"><i class="ti ti-history"></i></span><span class="mt">履歴</span></div>
+    <div class="modeitem" onclick="showList('alerts')"><span class="mi" style="background:#FBE3E1;color:#B4241E;"><i class="ti ti-bell"></i></span><span class="mt">発注点アラート</span></div>
     <div class="modeitem" onclick="retryCam()"><span class="mi" style="background:var(--accent-soft);color:var(--accent-d);"><i class="ti ti-camera"></i></span><span class="mt">カメラを再試行</span></div>
     <div class="modeitem" onclick="signOut()"><span class="mi" style="background:var(--bad-soft);color:var(--bad);"><i class="ti ti-logout"></i></span><span class="mt">ログアウト</span></div>
   </div>
@@ -247,11 +247,11 @@ var MODE_META = {
 };
 // 画面ごとのテーマ色 [淡い背景, 濃い文字/アイコン]（モードメニューの色に対応）
 var THEMES = {
-  '使用':    ['#FBE3E1','#B4241E'],
+  '使用':    ['#E7EFF8','#1E4E82'],
   '入庫':    ['#E1F1E9','#1F7A52'],
   '棚卸':    ['#FBEBD4','#B26A06'],
-  'history': ['#E7EFF8','#1E4E82'],
-  'alerts':  ['#FBEBD4','#B26A06']
+  'history': ['#FCF4D6','#856A09'],
+  'alerts':  ['#FBE3E1','#B4241E']
 };
 function setTheme(key){
   var t = THEMES[key] || THEMES['使用'];
