@@ -39,6 +39,7 @@
   .row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
   .btn{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:var(--accent-d);font-weight:600;font-size:16px;padding:15px;border-radius:12px;width:100%;border:0;cursor:pointer;font-family:var(--font);}
   .btn:active{transform:scale(.99);}
+  .btn:disabled{opacity:.4;cursor:default;transform:none;}
   .btn.ghost{background:transparent;color:var(--accent-d);border:1px solid var(--line2);}
   .btn.ok{background:var(--ok);color:#fff;} .btn.warn{background:var(--warn);color:#fff;} .btn.bad{background:var(--bad);color:#fff;}
   .pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;}
@@ -260,7 +261,7 @@ function setTheme(key){
   rs.setProperty('--accent-soft', t[0]);
   rs.setProperty('--accent-d', t[1]);
 }
-var current = null, qty = 1, scanner = null, busy = false;
+var current = null, qty = 1, scanner = null, busy = false, qtyBlocked = false;
 var ID_TOKEN = '', ME = '';
 
 /* ---------------- boot ---------------- */
@@ -398,20 +399,30 @@ function editQty(){
 }
 function updateQty(){
   var el = document.getElementById('qty'); el.value = qty; el.style.color = 'var(--accent-d)';
-  var after, warn=false, warnTxt='';
-  if (MODE==='使用'){ after = roundQ(current.stock - qty); if (after<0){ warn=true; warnTxt='在庫がマイナスになります（'+fmt(current.stock)+' → '+fmt(after)+'）。このまま記録もできます。'; el.style.color='var(--bad)'; } }
-  else if (MODE==='入庫'){ after = roundQ(current.stock + qty); }
-  else { after = roundQ(qty - current.stock); }
+  var after, block='';
+  if (MODE==='使用'){
+    after = roundQ(current.stock - qty);
+    if (current.stock <= 0) block = 'この品目は在庫がないため使用できません。';
+    else if (qty > current.stock) block = '在庫が不足しているため使用できません（在庫: '+fmt(current.stock)+(current.unit||'')+'）。';
+    if (block) el.style.color='var(--bad)';
+  } else if (MODE==='入庫'){
+    after = roundQ(current.stock + qty);
+    if (current.active === false) block = '廃番品のため入庫処理ができません。';
+  } else { after = roundQ(qty - current.stock); }
   var afterEl = document.getElementById('i-after');
   if (MODE==='棚卸'){ afterEl.textContent = (after>=0?'+':'') + fmt(after) + ' ' + (current.unit||''); afterEl.style.color = after<0?'var(--bad)':'var(--ok)'; }
   else { afterEl.textContent = fmt(after) + ' ' + (current.unit||''); afterEl.style.color = (after<0?'var(--bad)':'var(--ok)'); }
-  document.getElementById('i-warn').classList.toggle('hidden', !warn);
-  document.getElementById('i-warn-txt').textContent = warnTxt;
+  qtyBlocked = !!block;
+  document.getElementById('i-warn').classList.toggle('hidden', !block);
+  document.getElementById('i-warn-txt').textContent = block;
   var m = MODE_META[MODE];
-  document.getElementById('confirm-btn').className = 'btn ' + (warn ? 'bad' : (m.btn||''));
+  var btn = document.getElementById('confirm-btn');
+  btn.className = 'btn ' + (block ? 'bad' : (m.btn||''));
+  btn.disabled = qtyBlocked;
 }
 function confirmTx(){
-  if (busy) return; busy=true;
+  if (busy || qtyBlocked) return;
+  busy=true;
   var btn=document.getElementById('confirm-btn'); btn.disabled=true;
   showBusy((MODE==='棚卸'?'補正を記録中…':(MODE==='入庫'?'入庫を記録中…':'記録中…')));
   api('record', { itemId: current.id, type: MODE, qty: qty }).then(function (res) {
