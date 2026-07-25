@@ -107,6 +107,16 @@
   .busy-box{background:var(--card);border-radius:16px;padding:22px 30px;display:flex;flex-direction:column;align-items:center;gap:13px;box-shadow:0 14px 34px rgba(0,0,0,.28);}
   .busy-box .spin{width:42px;height:42px;border-width:4px;}
   .busy-box .lbl{font-size:14px;font-weight:600;color:var(--ink);}
+  .tk-ov{position:fixed;inset:0;z-index:35;background:rgba(6,10,12,.5);display:flex;flex-direction:column;justify-content:flex-end;}
+  .tk-card{background:var(--card);border-radius:20px 20px 0 0;padding:12px 16px calc(16px + env(safe-area-inset-bottom));}
+  .tk-head{display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:600;color:var(--ink2);padding:4px 2px 6px;}
+  .tk-head button{background:none;border:0;font-size:22px;color:var(--ink2);cursor:pointer;}
+  .tk-disp{font-family:var(--mono);font-size:34px;font-weight:700;text-align:right;padding:6px 8px 12px;color:var(--accent-d);min-height:50px;}
+  .tk-disp .u{font-size:18px;color:var(--ink2);margin-left:4px;}
+  .tk-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .tk-grid button{font-family:var(--mono);font-size:24px;font-weight:600;padding:15px 0;border:1px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);cursor:pointer;}
+  .tk-grid button:active{background:var(--bg);}
+  .tk-card .tk-ok{margin-top:10px;}
 </style>
 </head>
 <body>
@@ -204,6 +214,21 @@
 <!-- BUSY OVERLAY（処理中・操作ブロック） -->
 <div id="busy" class="busy-ov hidden">
   <div class="busy-box"><div class="spin"></div><div class="lbl" id="busy-label">処理中…</div></div>
+</div>
+
+<!-- TENKEY（数量入力） -->
+<div id="tenkey" class="tk-ov hidden" onclick="if(event.target===this)closeTenkey()">
+  <div class="tk-card">
+    <div class="tk-head"><span id="tk-title">数量を入力</span><button onclick="closeTenkey()" aria-label="閉じる"><i class="ti ti-x"></i></button></div>
+    <div class="tk-disp"><span id="tk-val">0</span><span class="u" id="tk-unit"></span></div>
+    <div class="tk-grid">
+      <button onclick="tkPress('7')">7</button><button onclick="tkPress('8')">8</button><button onclick="tkPress('9')">9</button>
+      <button onclick="tkPress('4')">4</button><button onclick="tkPress('5')">5</button><button onclick="tkPress('6')">6</button>
+      <button onclick="tkPress('1')">1</button><button onclick="tkPress('2')">2</button><button onclick="tkPress('3')">3</button>
+      <button id="tk-dot" onclick="tkPress('.')">.</button><button onclick="tkPress('0')">0</button><button onclick="tkBack()"><i class="ti ti-backspace"></i></button>
+    </div>
+    <button class="btn tk-ok" onclick="tkConfirm()"><i class="ti ti-check"></i> 決定</button>
+  </div>
 </div>
 
 <!-- CAMERA PERMISSION POPUP -->
@@ -375,7 +400,7 @@ function openItem(){
   var pill = document.getElementById('i-pill'); pill.textContent = MODE; pill.className = 'pill ' + m.pill;
   document.getElementById('i-name').textContent = current.name;
   var meta = [];
-  if (current.active === false) meta.push('<span style="color:var(--bad);font-weight:700;">● 無効の品目</span>');
+  if (current.active === false) meta.push('<span style="color:var(--bad);font-weight:700;">● 廃番品</span>');
   if (current.model)    meta.push('型番: ' + esc(current.model));
   if (current.location) meta.push('<i class="ti ti-map-pin"></i> ' + esc(current.location));
   if (current.supplier) meta.push('発注先: ' + esc(current.supplier));
@@ -391,15 +416,37 @@ function decs_(){ return (current && current.decimals != null) ? current.decimal
 function roundQ(n){ var f = Math.pow(10, decs_()); return Math.round((Number(n)||0)*f)/f; }
 function countDec_(s){ s = String(s); var i = s.indexOf('.'); return i < 0 ? 0 : (s.length - i - 1); }
 function stepQty(d){ qty = roundQ(Math.max((MODE==='棚卸'?0:1), qty + d)); updateQty(); }
-function editQty(){
-  var d = decs_();
-  var v = prompt((MODE==='棚卸'?'実数を入力':'数量を入力') + (d>0 ? ('（小数第'+d+'位まで）') : '（整数のみ）'), '');
-  if (v===null || v.trim()==='') return;
-  var s = v.trim(), n = parseFloat(s);
+/* ---- テンキー（アプリ内数字キーパッド） ---- */
+var tkBuf = '';
+function editQty(){ openTenkey(); }
+function openTenkey(){
+  tkBuf = '';
+  document.getElementById('tk-title').textContent = (MODE==='棚卸'?'実数を入力':'数量を入力') + (decs_()>0 ? ('（小数第'+decs_()+'位まで）') : '（整数）');
+  document.getElementById('tk-unit').textContent = (current && current.unit) ? current.unit : '';
+  document.getElementById('tk-dot').style.visibility = (decs_()>0) ? 'visible' : 'hidden';   // 小数不可なら「.」を無効化
+  renderTk();
+  document.getElementById('tenkey').classList.remove('hidden');
+}
+function closeTenkey(){ document.getElementById('tenkey').classList.add('hidden'); }
+function tkPress(k){
+  if (k==='.'){
+    if (decs_()<=0 || tkBuf.indexOf('.')>=0) return;
+    tkBuf = (tkBuf==='' ? '0' : tkBuf) + '.';
+  } else {
+    var dot = tkBuf.indexOf('.');
+    if (dot>=0 && (tkBuf.length-dot-1) >= decs_()) return;   // 小数桁数の上限
+    if (tkBuf==='0') tkBuf = k; else tkBuf += k;
+    if (tkBuf.replace('.','').length > 9) return;            // 桁数ガード
+  }
+  renderTk();
+}
+function tkBack(){ tkBuf = tkBuf.slice(0,-1); renderTk(); }
+function renderTk(){ document.getElementById('tk-val').textContent = (tkBuf==='' ? '0' : tkBuf); }
+function tkConfirm(){
+  var n = parseFloat(tkBuf);
   if (isNaN(n) || n<0) { toast('数値を入力してください'); return; }
-  if (countDec_(s) > d) { toast(d===0 ? 'この品目は整数で入力してください' : ('小数第'+d+'位まで入力できます')); return; }
   if (MODE!=='棚卸' && n<=0) { toast('0より大きい数を入力してください'); return; }
-  qty = roundQ(n); updateQty();
+  qty = roundQ(n); closeTenkey(); updateQty();
 }
 function updateQty(){
   var el = document.getElementById('qty'); el.value = qty; el.style.color = 'var(--accent-d)';
