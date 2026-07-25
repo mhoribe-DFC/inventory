@@ -15,7 +15,7 @@
 <style>
   :root{
     --bg:#F6F8FA; --card:#FFFFFF; --ink:#141A20; --ink2:#59636E; --line:#E4E9EE; --line2:#D3DAE1;
-    --accent:#E5322C; --accent-d:#B4241E; --accent-soft:#FBE3E1;
+    --accent:#FBE3E1; --accent-d:#B4241E; --accent-soft:#FBE3E1;
     --ok:#1F7A52; --ok-soft:#E1F1E9; --warn:#B26A06; --warn-soft:#FBEBD4; --bad:#B23A2E; --bad-soft:#F8E2DE;
     --font:"Hiragino Kaku Gothic ProN","Hiragino Sans","BIZ UDPGothic","Yu Gothic","Meiryo",system-ui,sans-serif;
     --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
@@ -27,22 +27,22 @@
   .hidden{display:none !important;}
   .num{font-family:var(--mono);font-variant-numeric:tabular-nums;}
   .muted{color:var(--ink2);} .sm{font-size:13px;} .tiny{font-size:11px;}
-  .appbar{background:var(--accent);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px;flex:none;padding-top:max(14px,env(safe-area-inset-top));}
+  .appbar{background:var(--accent);color:var(--accent-d);padding:14px 16px;display:flex;align-items:center;gap:10px;flex:none;padding-top:max(14px,env(safe-area-inset-top));}
   .appbar .t{font-size:16px;font-weight:600;}
-  .appbar .ic{font-size:20px;background:none;border:0;color:#fff;padding:4px;cursor:pointer;}
-  .appbar .back{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.18);border:0;color:#fff;font-size:14px;font-weight:600;padding:8px 13px;border-radius:9px;cursor:pointer;font-family:var(--font);}
-  .appbar .back:active{background:rgba(255,255,255,.32);}
+  .appbar .ic{font-size:20px;background:none;border:0;color:var(--accent-d);padding:4px;cursor:pointer;}
+  .appbar .back{display:inline-flex;align-items:center;gap:4px;background:rgba(0,0,0,.06);border:0;color:var(--accent-d);font-size:14px;font-weight:600;padding:8px 13px;border-radius:9px;cursor:pointer;font-family:var(--font);}
+  .appbar .back:active{background:rgba(0,0,0,.12);}
   .appbar .spacer{flex:1;}
   .content{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px;}
   .center{justify-content:center;align-items:center;text-align:center;}
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;}
   .row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-  .btn{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#fff;font-weight:600;font-size:16px;padding:15px;border-radius:12px;width:100%;border:0;cursor:pointer;font-family:var(--font);}
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:var(--accent-d);font-weight:600;font-size:16px;padding:15px;border-radius:12px;width:100%;border:0;cursor:pointer;font-family:var(--font);}
   .btn:active{transform:scale(.99);}
-  .btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--line2);}
-  .btn.ok{background:var(--ok);} .btn.warn{background:var(--warn);} .btn.bad{background:var(--bad);}
+  .btn.ghost{background:transparent;color:var(--accent-d);border:1px solid var(--line2);}
+  .btn.ok{background:var(--ok);color:#fff;} .btn.warn{background:var(--warn);color:#fff;} .btn.bad{background:var(--bad);color:#fff;}
   .pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;}
-  .p-use{background:var(--accent-soft);color:var(--accent-d);}
+  .p-use{background:#FBE3E1;color:#B4241E;}
   .p-in{background:var(--ok-soft);color:var(--ok);}
   .p-count{background:var(--warn-soft);color:var(--warn);}
   .p-cancel{background:var(--bad-soft);color:var(--bad);}
@@ -58,7 +58,7 @@
   .fr .bl{bottom:0;left:0;border-bottom:3px solid #fff;border-left:3px solid #fff;border-radius:0 0 0 13px;}
   .fr .br{bottom:0;right:0;border-bottom:3px solid #fff;border-right:3px solid #fff;border-radius:0 0 13px 0;}
   .cam-top{position:absolute;top:0;left:0;right:0;z-index:5;display:flex;justify-content:flex-start;padding:14px;padding-top:max(14px,env(safe-area-inset-top));}
-  .modechip{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#fff;font-size:15px;font-weight:700;padding:11px 16px;border-radius:999px;box-shadow:0 3px 12px rgba(0,0,0,.4);border:0;cursor:pointer;font-family:var(--font);}
+  .modechip{display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:var(--accent-d);font-size:15px;font-weight:700;padding:11px 16px;border-radius:999px;box-shadow:0 3px 12px rgba(0,0,0,.3);border:0;cursor:pointer;font-family:var(--font);}
   .modechip:active{filter:brightness(.94);}
   .cam-bottom{position:absolute;left:0;right:0;bottom:0;z-index:5;padding:28px 16px calc(16px + env(safe-area-inset-bottom));background:linear-gradient(to top, rgba(6,10,12,.82), rgba(6,10,12,0));display:flex;flex-direction:column;gap:12px;}
   .cam-hint{text-align:center;color:#fff;font-size:13px;font-weight:600;}
@@ -70,9 +70,9 @@
   .cam-manual button{background:#fff;border:0;border-radius:10px;padding:0 18px;font-weight:700;color:var(--accent-d);cursor:pointer;font-size:15px;}
 
   .stepper{display:flex;align-items:center;justify-content:space-between;gap:12px;}
-  .stepper button{width:60px;height:60px;border-radius:16px;border:1px solid var(--line2);background:var(--card);color:var(--accent);font-size:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
-  .stepper .val{font-family:var(--mono);font-size:46px;font-weight:700;line-height:1;background:none;border:0;text-align:center;width:120px;cursor:pointer;color:var(--accent);}
-  .taphint{font-size:11px;color:var(--accent);border:1px solid var(--line2);border-radius:999px;padding:3px 10px;margin-top:8px;display:inline-block;}
+  .stepper button{width:60px;height:60px;border-radius:16px;border:1px solid var(--line2);background:var(--card);color:var(--accent-d);font-size:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .stepper .val{font-family:var(--mono);font-size:46px;font-weight:700;line-height:1;background:none;border:0;text-align:center;width:120px;cursor:pointer;color:var(--accent-d);}
+  .taphint{font-size:11px;color:var(--accent-d);border:1px solid var(--line2);border-radius:999px;padding:3px 10px;margin-top:8px;display:inline-block;}
 
   .list-row{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid var(--line);}
   .thumb{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex:none;font-weight:700;}
@@ -85,7 +85,7 @@
   .modeitem:last-child{border-bottom:0;}
   .mi{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:19px;flex:none;}
   .mt{flex:1;font-size:15px;font-weight:600;}
-  .chk{color:var(--accent);font-size:20px;}
+  .chk{color:var(--accent-d);font-size:20px;}
 
   .permwrap{position:fixed;inset:0;z-index:30;background:rgba(10,14,17,.6);display:flex;align-items:center;justify-content:center;padding:24px;}
   .permcard{background:var(--card);border-radius:20px;padding:26px 22px;max-width:340px;width:100%;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.3);}
@@ -96,11 +96,12 @@
 
   .check{width:88px;height:88px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:flex;align-items:center;justify-content:center;font-size:46px;margin:0 auto;}
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#222;color:#fff;padding:12px 18px;border-radius:10px;font-size:14px;z-index:40;max-width:90%;text-align:center;}
-  .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;margin:0 auto;}
+  .spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent-d);border-radius:50%;animation:sp 1s linear infinite;margin:0 auto;}
   @keyframes sp{to{transform:rotate(360deg);}}
   .banner{display:flex;gap:9px;align-items:flex-start;background:var(--warn-soft);border-radius:12px;padding:12px;}
   .banner .i{color:var(--warn);font-size:17px;flex:none;} .banner .txt{font-size:13px;line-height:1.5;}
-  .brand{width:76px;height:76px;border-radius:20px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:38px;margin:0 auto;}
+  .brand{width:84px;height:84px;border-radius:20px;overflow:hidden;margin:0 auto;box-shadow:0 4px 14px rgba(0,0,0,.15);}
+  .brand img{display:block;width:100%;height:100%;}
   .busy-ov{position:fixed;inset:0;z-index:60;background:rgba(8,12,15,.38);display:flex;align-items:center;justify-content:center;}
   .busy-box{background:var(--card);border-radius:16px;padding:22px 30px;display:flex;flex-direction:column;align-items:center;gap:13px;box-shadow:0 14px 34px rgba(0,0,0,.28);}
   .busy-box .spin{width:42px;height:42px;border-width:4px;}
@@ -223,8 +224,8 @@
     <div class="modeitem" onclick="selectMode('入庫')"><span class="mi p-in"><i class="ti ti-plus"></i></span><span class="mt">入庫（在庫を増やす）</span><i class="ti ti-check chk mode-chk hidden" data-m="入庫"></i></div>
     <div class="modeitem" onclick="selectMode('棚卸')"><span class="mi p-count"><i class="ti ti-clipboard-check"></i></span><span class="mt">棚卸し（実数に補正）</span><i class="ti ti-check chk mode-chk hidden" data-m="棚卸"></i></div>
     <div class="menu-sep"></div>
-    <div class="modeitem" onclick="showList('history')"><span class="mi" style="background:var(--line);color:var(--ink2);"><i class="ti ti-history"></i></span><span class="mt">履歴</span></div>
-    <div class="modeitem" onclick="showList('alerts')"><span class="mi" style="background:var(--line);color:var(--ink2);"><i class="ti ti-bell"></i></span><span class="mt">発注点アラート</span></div>
+    <div class="modeitem" onclick="showList('history')"><span class="mi" style="background:#E7EFF8;color:#1E4E82;"><i class="ti ti-history"></i></span><span class="mt">履歴</span></div>
+    <div class="modeitem" onclick="showList('alerts')"><span class="mi" style="background:#FBEBD4;color:#B26A06;"><i class="ti ti-bell"></i></span><span class="mt">発注点アラート</span></div>
     <div class="modeitem" onclick="retryCam()"><span class="mi" style="background:var(--accent-soft);color:var(--accent-d);"><i class="ti ti-camera"></i></span><span class="mt">カメラを再試行</span></div>
     <div class="modeitem" onclick="signOut()"><span class="mi" style="background:var(--bad-soft);color:var(--bad);"><i class="ti ti-logout"></i></span><span class="mt">ログアウト</span></div>
   </div>
@@ -240,10 +241,25 @@ var CLIENT_ID = '237615246215-54vroil5c0f13n3h6g3g8vu8qever8aq.apps.googleuserco
 
 var MODE = '使用';
 var MODE_META = {
-  '使用': { pill:'p-use',   title:'使用数を入力', confirm:'確定して減算', afterLabel:'減算後の在庫', icon:'ti-minus',           btn:'' },
-  '入庫': { pill:'p-in',    title:'入庫数を入力', confirm:'入庫を記録',   afterLabel:'入庫後の在庫', icon:'ti-plus',            btn:'ok' },
-  '棚卸': { pill:'p-count', title:'実数を入力',   confirm:'在庫を補正',   afterLabel:'補正後の在庫', icon:'ti-clipboard-check', btn:'warn' }
+  '使用': { pill:'p-use',   title:'使用数を入力', confirm:'確定して減算', afterLabel:'減算後の在庫', icon:'ti-minus' },
+  '入庫': { pill:'p-in',    title:'入庫数を入力', confirm:'入庫を記録',   afterLabel:'入庫後の在庫', icon:'ti-plus' },
+  '棚卸': { pill:'p-count', title:'実数を入力',   confirm:'在庫を補正',   afterLabel:'補正後の在庫', icon:'ti-clipboard-check' }
 };
+// 画面ごとのテーマ色 [淡い背景, 濃い文字/アイコン]（モードメニューの色に対応）
+var THEMES = {
+  '使用':    ['#FBE3E1','#B4241E'],
+  '入庫':    ['#E1F1E9','#1F7A52'],
+  '棚卸':    ['#FBEBD4','#B26A06'],
+  'history': ['#E7EFF8','#1E4E82'],
+  'alerts':  ['#FBEBD4','#B26A06']
+};
+function setTheme(key){
+  var t = THEMES[key] || THEMES['使用'];
+  var rs = document.documentElement.style;
+  rs.setProperty('--accent', t[0]);
+  rs.setProperty('--accent-soft', t[0]);
+  rs.setProperty('--accent-d', t[1]);
+}
 var current = null, qty = 1, scanner = null, busy = false;
 var ID_TOKEN = '', ME = '';
 
@@ -374,7 +390,7 @@ function editQty(){
   qty = (MODE==='棚卸') ? n : Math.max(1,n); updateQty();
 }
 function updateQty(){
-  var el = document.getElementById('qty'); el.value = qty; el.style.color = 'var(--accent)';
+  var el = document.getElementById('qty'); el.value = qty; el.style.color = 'var(--accent-d)';
   var after, warn=false, warnTxt='';
   if (MODE==='使用'){ after = current.stock - qty; if (after<0){ warn=true; warnTxt='在庫がマイナスになります（'+current.stock+' → '+after+'）。このまま記録もできます。'; el.style.color='var(--bad)'; } }
   else if (MODE==='入庫'){ after = current.stock + qty; }
@@ -401,7 +417,7 @@ function confirmTx(){
     show('done');
   }).catch(function (e) { busy=false; btn.disabled=false; hideBusy(); toast(e.message); });
 }
-function backToCam(){ current=null; startCam(); }
+function backToCam(){ current=null; setTheme(MODE); startCam(); }
 
 /* ---------------- mode menu（左上ドロップダウン） ---------------- */
 function toggleMenu(e){ if(e){ e.stopPropagation(); } document.getElementById('menu-user').textContent = ME || ''; document.getElementById('menu').classList.toggle('hidden'); }
@@ -409,6 +425,7 @@ function closeMenu(){ document.getElementById('menu').classList.add('hidden'); }
 function selectMode(m){ applyMode(m); closeMenu(); startCam(); }
 function applyMode(m){
   MODE = m; var meta = MODE_META[m];
+  setTheme(m);                                    // モードに応じてテーマ色を切替
   document.getElementById('mode-label').textContent = m + 'モード';
   document.getElementById('mode-icon').className = 'ti ' + meta.icon;
   document.querySelectorAll('.mode-chk').forEach(function(c){ c.classList.toggle('hidden', c.getAttribute('data-m')!==m); });
@@ -416,7 +433,7 @@ function applyMode(m){
 
 /* ---------------- lists ---------------- */
 var listKind = 'history';
-function showList(kind){ listKind=kind; closeMenu(); pauseCam(); reloadList(); show('list'); }
+function showList(kind){ listKind=kind; closeMenu(); pauseCam(); setTheme(kind); reloadList(); show('list'); }
 function reloadList(){
   var body = document.getElementById('list-body');
   document.getElementById('list-title').textContent = (listKind==='history') ? '履歴' : '発注点アラート';
