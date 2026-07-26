@@ -307,10 +307,10 @@ window.addEventListener('load', function () {
 });
 
 function initSignin(){
-  google.accounts.id.initialize({ client_id: CLIENT_ID, callback: onCredential, auto_select: true });
+  // auto_select:false ＋ prompt()を呼ばない → ボタンを押すまでサインインを聞かない
+  google.accounts.id.initialize({ client_id: CLIENT_ID, callback: onCredential, auto_select: false });
   showSignin();
   google.accounts.id.renderButton(document.getElementById('gbtn'), { theme:'filled_blue', size:'large', shape:'pill', text:'signin_with', locale:'ja' });
-  google.accounts.id.prompt();
 }
 
 function onCredential(resp){
