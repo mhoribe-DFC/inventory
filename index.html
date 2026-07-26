@@ -526,24 +526,27 @@ function renderHistory(rows){
   histRows = rows || [];
   var body = document.getElementById('list-body');
   if (!rows.length){ body.innerHTML = '<div class="muted center" style="padding-top:40px;">履歴はまだありません</div>'; return; }
-  var pm={'使用':'p-use','入庫':'p-in','棚卸':'p-count','取消':'p-cancel'}, im={'使用':'ti-minus','入庫':'ti-plus','棚卸':'ti-clipboard-check','取消':'ti-arrow-back-up'};
+  var pm={'使用':'p-use','入庫':'p-in','棚卸':'p-count','取消':'p-cancel'},
+      im={'使用':'ti-minus','入庫':'ti-plus','棚卸':'ti-clipboard-check','取消':'ti-arrow-back-up'},
+      cm={'使用':'#1E4E82','入庫':'#1F7A52','棚卸':'#B26A06','取消':'#B23A2E'};
   var anyCancel = rows.some(function(r){return r.canCancel;});
   var hint = anyCancel ? '<div class="tiny muted" style="padding:2px 2px 8px;">記録をタップすると取り消せます</div>' : '';
   body.innerHTML = hint + rows.map(function(r){
-    var pc=pm[r.type]||'p-use';
-    var faded = r.canceled ? 'opacity:.45;' : '';
-    var attr = r.canCancel ? (' onclick="askCancel(\''+r.recId+'\')" style="cursor:pointer;'+faded+'"') : (faded?(' style="'+faded+'"'):'');
-    var right = r.canceled
-      ? '<span class="pill" style="background:var(--line);color:var(--ink2);font-size:9.5px;">取消済</span>'
-      : (r.canCancel ? '<i class="ti ti-arrow-back-up" style="color:var(--ink3);font-size:18px;" aria-label="取り消す"></i>' : '');
+    var pc=pm[r.type]||'p-use', ic=im[r.type]||'ti-minus', qc=cm[r.type]||'var(--ink)';
+    var dim = r.canceled ? 'opacity:.5;' : '';
+    var attr = r.canCancel ? (' onclick="askCancel(\''+r.recId+'\')" style="cursor:pointer;'+dim+'"') : (dim?(' style="'+dim+'"'):'');
+    var nameStyle = 'font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;' + (r.canceled?'text-decoration:line-through;color:var(--ink2);':'');
+    var tag = r.canceled ? '<span class="tiny" style="flex:none;background:var(--line);color:var(--ink2);padding:1px 7px;border-radius:999px;font-weight:700;">取消済</span>' : '';
+    var undo = r.canCancel ? '<div style="color:var(--ink3);font-size:19px;width:20px;text-align:center;flex:none;"><i class="ti ti-arrow-back-up"></i></div>' : '';
     return '<div class="list-row"'+attr+'>'+
-      '<div class="thumb '+pc+'"><i class="ti '+(im[r.type]||'ti-minus')+'"></i></div>'+
-      '<div style="flex:1;min-width:0;"><div class="sm" style="font-weight:600;">'+esc(r.name)+'</div>'+
-      '<div class="tiny muted num">'+shortTime(r.time)+' · '+esc(shortUser(r.user))+'</div></div>'+
-      '<div style="text-align:right;"><span class="pill '+pc+'">'+r.type+'</span>'+
-      '<div class="num sm" style="margin-top:3px;">'+(r.qty>0?'+':'')+r.qty+'</div></div>'+
-      (right?('<div style="margin-left:8px;width:22px;text-align:center;">'+right+'</div>'):'')+
-      '</div>';
+      '<div class="thumb '+pc+'"><i class="ti '+ic+'"></i></div>'+
+      '<div style="flex:1;min-width:0;">'+
+        '<div style="display:flex;align-items:center;gap:6px;"><span class="sm" style="'+nameStyle+'">'+esc(r.name)+'</span>'+tag+'</div>'+
+        '<div class="tiny muted num" style="margin-top:3px;">'+shortTime(r.time)+' · '+esc(shortUser(r.user))+' · '+r.type+'</div>'+
+      '</div>'+
+      '<div class="num" style="font-size:18px;font-weight:700;min-width:50px;text-align:right;color:'+qc+';'+(r.canceled?'opacity:.7;':'')+'">'+(r.qty>0?'+':'')+r.qty+'</div>'+
+      undo+
+    '</div>';
   }).join('');
 }
 /* ---- 取り消し ---- */
