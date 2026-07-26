@@ -521,6 +521,17 @@ function reloadList(){
   if (listKind==='history') api('history',{limit:30}).then(renderHistory).catch(function(e){body.textContent=e.message;});
   else api('alerts',{}).then(renderAlerts).catch(function(e){body.textContent=e.message;});
 }
+// 区分アイコン（フォント非依存のインラインSVG。色はサムネイルの文字色を継承）
+function iconSvg(type){
+  var p = {
+    '使用':'<line x1="5" y1="12" x2="19" y2="12"/>',
+    '入庫':'<line x1="5" y1="12" x2="19" y2="12"/><line x1="12" y1="5" x2="12" y2="19"/>',
+    '棚卸':'<path d="M5 12.5l4 4 10-10"/>',
+    '取消':'<path d="M9 14L4 9l5-5"/><path d="M4 9h10a5.5 5.5 0 0 1 0 11h-2"/>'
+  }[type] || '<line x1="5" y1="12" x2="19" y2="12"/>';
+  return '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p+'</svg>';
+}
+
 var histRows = [];
 function renderHistory(rows){
   histRows = rows || [];
@@ -539,7 +550,7 @@ function renderHistory(rows){
     var tag = r.canceled ? '<span class="tiny" style="flex:none;background:var(--line);color:var(--ink2);padding:1px 7px;border-radius:999px;font-weight:700;">取消済</span>' : '';
     var undo = r.canCancel ? '<div style="color:var(--ink3);font-size:19px;width:20px;text-align:center;flex:none;"><i class="ti ti-arrow-back-up"></i></div>' : '';
     return '<div class="list-row"'+attr+'>'+
-      '<div class="thumb '+pc+'"><i class="ti '+ic+'"></i></div>'+
+      '<div class="thumb '+pc+'">'+iconSvg(r.type)+'</div>'+
       '<div style="flex:1;min-width:0;">'+
         '<div style="display:flex;align-items:center;gap:6px;"><span class="sm" style="'+nameStyle+'">'+esc(r.name)+'</span>'+tag+'</div>'+
         '<div class="tiny muted num" style="margin-top:3px;">'+shortTime(r.time)+' · '+esc(shortUser(r.user))+' · '+r.type+'</div>'+
