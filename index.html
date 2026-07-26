@@ -10,9 +10,7 @@
 <title>在庫管理</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon.svg">
-<link rel="icon" href="icon.svg">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css">
-<style>
+<link rel="icon" href="icon.svg"><style>
   :root{
     --bg:#F6F8FA; --card:#FFFFFF; --ink:#141A20; --ink2:#59636E; --line:#E4E9EE; --line2:#D3DAE1;
     --accent:#E7EFF8; --accent-d:#1E4E82; --accent-soft:#E7EFF8;
@@ -155,7 +153,7 @@
     <div id="reader"></div>
     <div class="cam-frame"><div class="fr"><span class="tl"></span><span class="tr"></span><span class="bl"></span><span class="br"></span></div></div>
     <div class="cam-top">
-      <button class="modechip" onclick="toggleMenu(event)" aria-label="モード切替"><i class="ti ti-minus" id="mode-icon"></i><span id="mode-label">使用モード</span><i class="ti ti-chevron-down" style="font-size:16px;opacity:.9;"></i></button>
+      <button class="modechip" onclick="toggleMenu(event)" aria-label="モード切替"><span id="mode-icon" style="display:inline-flex;"></span><span id="mode-label">使用モード</span><i class="ti ti-chevron-down" style="font-size:16px;opacity:.9;"></i></button>
     </div>
     <div class="cam-bottom">
       <div class="cam-hint">品目QRを枠内に合わせてください<small>読み取ると自動で次へ進みます</small></div>
@@ -245,7 +243,7 @@
 <!-- CAMERA PERMISSION POPUP -->
 <div id="perm" class="permwrap hidden">
   <div class="permcard">
-    <div class="permicon"><i class="ti ti-camera" id="perm-icon"></i></div>
+    <div class="permicon"><span id="perm-icon" style="display:inline-flex;"></span></div>
     <div class="permtitle" id="perm-title">カメラの使用を許可</div>
     <div class="permmsg" id="perm-msg">QRコードを読み取るためにカメラを使用します。次に表示される確認で「許可」を選んでください。</div>
     <button class="btn" id="perm-btn" onclick="requestCam()"><i class="ti ti-camera"></i> <span id="perm-btn-label">カメラを許可する</span></button>
@@ -278,9 +276,9 @@ var CLIENT_ID = '237615246215-54vroil5c0f13n3h6g3g8vu8qever8aq.apps.googleuserco
 
 var MODE = '使用';
 var MODE_META = {
-  '使用': { pill:'p-use',   title:'使用数を入力', confirm:'確定して減算', afterLabel:'減算後の在庫', icon:'ti-minus' },
-  '入庫': { pill:'p-in',    title:'入庫数を入力', confirm:'入庫を記録',   afterLabel:'入庫後の在庫', icon:'ti-plus' },
-  '棚卸': { pill:'p-count', title:'実数を入力',   confirm:'在庫を補正',   afterLabel:'補正後の在庫', icon:'ti-clipboard-check' }
+  '使用': { pill:'p-use',   title:'使用数を入力', confirm:'確定して減算', afterLabel:'減算後の在庫', icon:'minus' },
+  '入庫': { pill:'p-in',    title:'入庫数を入力', confirm:'入庫を記録',   afterLabel:'入庫後の在庫', icon:'plus' },
+  '棚卸': { pill:'p-count', title:'実数を入力',   confirm:'在庫を補正',   afterLabel:'補正後の在庫', icon:'check' }
 };
 // 画面ごとのテーマ色 [淡い背景, 濃い文字/アイコン]（モードメニューの色に対応）
 var THEMES = {
@@ -358,7 +356,7 @@ function show(name){
 /* ---------------- camera ---------------- */
 function showPerm(err){
   var granted = !err;
-  document.getElementById('perm-icon').className = 'ti ' + (granted ? 'ti-camera' : 'ti-camera-off');
+  document.getElementById('perm-icon').innerHTML = svg(granted ? 'camera' : 'camera-off', 34);
   document.getElementById('perm-title').textContent = granted ? 'カメラの使用を許可' : 'カメラを使用できませんでした';
   document.getElementById('perm-msg').innerHTML = granted
     ? 'QRコードを読み取るためにカメラを使用します。次に表示される確認で「許可」を選んでください。'
@@ -413,7 +411,7 @@ function openItem(){
   var meta = [];
   if (current.active === false) meta.push('<span style="color:var(--bad);font-weight:700;">● 廃番品</span>');
   if (current.model)    meta.push('型番: ' + esc(current.model));
-  if (current.location) meta.push('<i class="ti ti-map-pin"></i> ' + esc(current.location));
+  if (current.location) meta.push(svg('map-pin',13) + ' ' + esc(current.location));
   if (current.supplier) meta.push('発注先: ' + esc(current.supplier));
   document.getElementById('i-loc').innerHTML = meta.join(' ・ ');
   document.getElementById('i-stock').textContent = fmt(current.stock);
@@ -507,7 +505,7 @@ function applyMode(m){
   MODE = m; var meta = MODE_META[m];
   setTheme(m);                                    // モードに応じてテーマ色を切替
   document.getElementById('mode-label').textContent = m + 'モード';
-  document.getElementById('mode-icon').className = 'ti ' + meta.icon;
+  document.getElementById('mode-icon').innerHTML = svg(meta.icon, 18);
   document.querySelectorAll('.mode-chk').forEach(function(c){ c.classList.toggle('hidden', c.getAttribute('data-m')!==m); });
 }
 
@@ -521,6 +519,46 @@ function reloadList(){
   if (listKind==='history') api('history',{limit:30}).then(renderHistory).catch(function(e){body.textContent=e.message;});
   else api('alerts',{}).then(renderAlerts).catch(function(e){body.textContent=e.message;});
 }
+/* ===== アイコン（外部フォント非依存の内蔵SVG） ===== */
+var SVGP = {
+  'check':{m:'<path d="M5 12l5 5L20 7"/>',w:2.4},
+  'minus':{m:'<line x1="5" y1="12" x2="19" y2="12"/>',w:2.2},
+  'plus':{m:'<line x1="5" y1="12" x2="19" y2="12"/><line x1="12" y1="5" x2="12" y2="19"/>',w:2.2},
+  'clipboard-check':{m:'<path d="M5 12l5 5L20 7"/>',w:2.4},
+  'camera':{m:'<rect x="3" y="7" width="18" height="13" rx="2.5"/><circle cx="12" cy="13.5" r="3.4"/><path d="M8 7l1.5-2.2h5L16 7"/>',w:2},
+  'camera-off':{m:'<path d="M4 4l16 16"/><path d="M7 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12"/><path d="M20 16.5V9a2 2 0 0 0-2-2h-2l-1.5-2.2h-3"/>',w:2},
+  'arrow-back-up':{m:'<path d="M9 14L4 9l5-5"/><path d="M4 9h10a5.5 5.5 0 0 1 0 11h-2"/>',w:2},
+  'alert-triangle':{m:'<path d="M12 4l9.5 16.5H2.5z"/><line x1="12" y1="10" x2="12" y2="14"/><line x1="12" y1="17" x2="12" y2="17"/>',w:2},
+  'lock':{m:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',w:2},
+  'arrow-left':{m:'<path d="M20 12H5"/><path d="M11 6l-6 6 6 6"/>',w:2},
+  'x':{m:'<path d="M6 6l12 12"/><path d="M18 6L6 18"/>',w:2.2},
+  'settings-exclamation':{m:'<circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12" y2="16"/>',w:2},
+  'refresh':{m:'<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/>',w:2},
+  'map-pin':{m:'<path d="M12 21s7-6.5 7-11a7 7 0 1 0-14 0c0 4.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.4"/>',w:2},
+  'hand-finger':{m:'<path d="M10 12V6a1.5 1.5 0 0 1 3 0v5"/><path d="M13 11V8a1.5 1.5 0 0 1 3 0v6a6 6 0 0 1-6 6h-1a5 5 0 0 1-4-2l-2.2-3a1.4 1.4 0 0 1 2.2-1.6L10 15"/>',w:2},
+  'chevron-down':{m:'<path d="M6 9l6 6 6-6"/>',w:2.2},
+  'backspace':{m:'<path d="M20 6H9L3 12l6 6h11a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1z"/><path d="M17 10l-4 4"/><path d="M13 10l4 4"/>',w:2}
+};
+function svg(name, size){
+  var d = SVGP[name] || SVGP['check']; size = size || 20;
+  return '<svg viewBox="0 0 24 24" width="'+size+'" height="'+size+'" fill="none" stroke="currentColor" stroke-width="'+d.w+'" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.15em" aria-hidden="true">'+d.m+'</svg>';
+}
+// ページ内の <i class="ti ti-xxx"> を、色・サイズを保ったままSVGに置き換える
+function paintIcons(root){
+  var list = (root || document).querySelectorAll('i.ti');
+  for (var i = 0; i < list.length; i++){
+    var el = list[i], name = '';
+    for (var j = 0; j < el.classList.length; j++){ var c = el.classList[j]; if (c.indexOf('ti-') === 0){ name = c.slice(3); break; } }
+    if (!SVGP[name]) continue;
+    var cs = getComputedStyle(el);
+    var size = Math.round(parseFloat(cs.fontSize)) || 20;
+    var span = document.createElement('span');
+    span.style.display = 'inline-flex'; span.style.color = cs.color; span.style.verticalAlign = 'middle';
+    span.innerHTML = svg(name, size);
+    el.replaceWith(span);
+  }
+}
+
 // 区分アイコン（フォント非依存のインラインSVG。色はサムネイルの文字色を継承）
 function iconSvg(type){
   var p = {
@@ -548,7 +586,7 @@ function renderHistory(rows){
     var attr = r.canCancel ? (' onclick="askCancel(\''+r.recId+'\')" style="cursor:pointer;'+dim+'"') : (dim?(' style="'+dim+'"'):'');
     var nameStyle = 'font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;' + (r.canceled?'text-decoration:line-through;color:var(--ink2);':'');
     var tag = r.canceled ? '<span class="tiny" style="flex:none;background:var(--line);color:var(--ink2);padding:1px 7px;border-radius:999px;font-weight:700;">取消済</span>' : '';
-    var undo = r.canCancel ? '<div style="color:var(--ink3);font-size:19px;width:20px;text-align:center;flex:none;"><i class="ti ti-arrow-back-up"></i></div>' : '';
+    var undo = r.canCancel ? '<div style="color:var(--ink3);width:20px;text-align:center;flex:none;">'+svg('arrow-back-up',19)+'</div>' : '';
     return '<div class="list-row"'+attr+'>'+
       '<div class="thumb '+pc+'">'+iconSvg(r.type)+'</div>'+
       '<div style="flex:1;min-width:0;">'+
@@ -583,8 +621,8 @@ function doCancel(){
 
 function renderAlerts(rows){
   var body = document.getElementById('list-body');
-  if (!rows.length){ body.innerHTML = '<div class="muted center" style="padding-top:40px;"><i class="ti ti-check" style="font-size:32px;color:var(--ok)"></i><div>発注点を下回る品目はありません</div></div>'; return; }
-  body.innerHTML = '<div class="banner"><span class="i"><i class="ti ti-alert-triangle"></i></span><span class="txt"><b>'+rows.length+'品目</b>が発注点を下回っています</span></div><div class="card" style="padding:0;">' +
+  if (!rows.length){ body.innerHTML = '<div class="muted center" style="padding-top:40px;"><span style="color:var(--ok)">'+svg('check',32)+'</span><div>発注点を下回る品目はありません</div></div>'; return; }
+  body.innerHTML = '<div class="banner"><span class="i">'+svg('alert-triangle',17)+'</span><span class="txt"><b>'+rows.length+'品目</b>が発注点を下回っています</span></div><div class="card" style="padding:0;">' +
     rows.map(function(r){ return '<div class="list-row" style="padding:13px 14px;"><div style="flex:1;"><div class="sm" style="font-weight:600;">'+esc(r.name)+'</div><div class="tiny muted">発注点 '+r.reorder+' '+esc(r.unit||'')+'</div></div><div class="num" style="font-weight:700;color:var(--bad);">'+r.stock+'</div></div>'; }).join('') + '</div>';
 }
 
@@ -602,6 +640,9 @@ function toast(msg, ms){
   el.textContent=msg; el.style.display='block';
   toastT=setTimeout(function(){el.style.display='none';}, ms||2200);
 }
+
+/* ---------------- 静的アイコンをSVG化 ---------------- */
+paintIcons(document);
 
 /* ---------------- service worker ---------------- */
 if ('serviceWorker' in navigator) { window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
