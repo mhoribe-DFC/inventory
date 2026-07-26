@@ -10,7 +10,10 @@
 <title>在庫管理</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon.svg">
-<link rel="icon" href="icon.svg"><style>
+<link rel="icon" href="icon.svg">
+<link rel="preconnect" href="https://accounts.google.com">
+<link rel="preconnect" href="https://accounts.google.com" crossorigin>
+<style>
   :root{
     --bg:#F6F8FA; --card:#FFFFFF; --ink:#141A20; --ink2:#59636E; --line:#E4E9EE; --line2:#D3DAE1;
     --accent:#E7EFF8; --accent-d:#1E4E82; --accent-soft:#E7EFF8;
@@ -127,16 +130,16 @@
     <div class="muted sm" style="line-height:1.6;">index.html 冒頭の <b>API_URL</b> と <b>CLIENT_ID</b> を設定してください。<br>（セットアップ手順_v2.md 参照）</div>
   </div>
 
-  <!-- SIGN IN -->
-  <div id="view-signin" class="content center hidden" style="gap:18px;">
+  <!-- SIGN IN（初期表示） -->
+  <div id="view-signin" class="content center" style="gap:18px;">
     <div class="brand"><img src="icon.svg" alt="在庫管理" width="84" height="84"></div>
     <div><div style="font-size:20px;font-weight:700;">在庫管理</div><div class="sm muted" style="margin-top:4px;">会社のGoogleアカウントでログイン</div></div>
-    <div id="gbtn"></div>
+    <div id="gbtn" style="min-height:44px;display:flex;align-items:center;justify-content:center;"></div>
     <div class="banner" style="background:var(--accent-soft);max-width:320px;"><span class="i" style="color:var(--accent-d);"><i class="ti ti-lock"></i></span><span class="txt">@dfc-kyoto.co.jp のアカウントのみ利用できます</span></div>
   </div>
 
   <!-- LOADING -->
-  <div id="view-loading" class="content center">
+  <div id="view-loading" class="content center hidden">
     <div class="spin"></div><div class="muted sm">読み込み中…</div>
   </div>
 
