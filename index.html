@@ -136,7 +136,7 @@
   <div id="view-signin" class="content center" style="gap:18px;">
     <div class="brand"><img src="icon.svg" alt="在庫管理" width="84" height="84"></div>
     <div><div style="font-size:20px;font-weight:700;">在庫管理</div><div class="sm muted" style="margin-top:4px;">会社のGoogleアカウントでログイン</div></div>
-    <div id="gbtn" style="height:44px;overflow:hidden;display:flex;align-items:center;justify-content:center;"></div>
+    <div id="gbtn" style="height:44px;overflow:hidden;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s ease;"></div>
     <div class="banner" style="background:var(--accent-soft);max-width:320px;"><span class="i" style="color:var(--accent-d);"><i class="ti ti-lock"></i></span><span class="txt">@dfc-kyoto.co.jp のアカウントのみ利用できます</span></div>
   </div>
 
@@ -316,6 +316,19 @@ function initSignin(){
   google.accounts.id.initialize({ client_id: CLIENT_ID, callback: onCredential, auto_select: false });
   showSignin();
   google.accounts.id.renderButton(document.getElementById('gbtn'), { theme:'filled_blue', size:'large', shape:'pill', text:'signin_with', locale:'ja' });
+  revealGbtn();
+}
+
+// Googleボタンの2段階描画（空→完成）が見えないよう、完成するまで隠しておき描き終えてから表示する
+function revealGbtn(){
+  var g = document.getElementById('gbtn'), tries = 0;
+  (function poll(){
+    var ifr = g.querySelector('iframe');
+    var h = ifr ? ifr.getBoundingClientRect().height : 0;
+    if (h >= 40) { setTimeout(function(){ g.style.opacity = '1'; }, 60); return; }
+    if (tries++ > 50) { g.style.opacity = '1'; return; } // フォールバック: 一定時間で必ず表示
+    setTimeout(poll, 40);
+  })();
 }
 
 function onCredential(resp){
