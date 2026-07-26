@@ -22,6 +22,8 @@
     --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  /* アイコンの場所を先に確保し、SVG差し替え時のガタつき（レイアウトシフト）を防ぐ */
+  i.ti{display:inline-block;width:1em;height:1em;line-height:0;vertical-align:middle;flex:none;}
   html,body{margin:0;height:100%;}
   body{font-family:var(--font);color:var(--ink);background:var(--bg);overflow:hidden;}
   #app{height:100dvh;display:flex;flex-direction:column;}
