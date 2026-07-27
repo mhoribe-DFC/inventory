@@ -264,6 +264,7 @@
     <div class="modeitem" onclick="selectMode('入庫')"><span class="mi p-in"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><line x1="12" y1="5" x2="12" y2="19"/></svg></span><span class="mt">入庫（在庫を増やす）</span><span class="chk mode-chk hidden" data-m="入庫"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4 4 10-10"/></svg></span></div>
     <div class="modeitem" onclick="selectMode('棚卸')"><span class="mi p-count"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4 4 10-10"/></svg></span><span class="mt">棚卸し（実数に補正）</span><span class="chk mode-chk hidden" data-m="棚卸"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4 4 10-10"/></svg></span></div>
     <div class="menu-sep"></div>
+    <div class="modeitem" onclick="showList('stock')"><span class="mi" style="background:#E2F0EE;color:#0E7C86;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="4.5" cy="7" r="1.1"/><circle cx="4.5" cy="12" r="1.1"/><circle cx="4.5" cy="17" r="1.1"/><line x1="9" y1="7" x2="20" y2="7"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="17" x2="20" y2="17"/></svg></span><span class="mt">在庫一覧</span></div>
     <div class="modeitem" onclick="showList('history')"><span class="mi" style="background:#FCF4D6;color:#856A09;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6"/><path d="M6 3v3.5H9.5"/><path d="M12 8v4.5l3 2"/></svg></span><span class="mt">履歴</span></div>
     <div class="modeitem" onclick="showList('alerts')"><span class="mi" style="background:#FBE3E1;color:#B4241E;"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 20a2 2 0 0 0 4 0"/><path d="M5.5 16.5l1.2-1.5V11a5.3 5.3 0 0 1 10.6 0v4l1.2 1.5z"/></svg></span><span class="mt">発注点アラート</span></div>
     <div class="modeitem" onclick="retryCam()"><span class="mi" style="background:var(--accent-soft);color:var(--accent-d);"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2.5"/><circle cx="12" cy="13.5" r="3.4"/><path d="M8 7l1.5-2.2h5L16 7"/></svg></span><span class="mt">カメラを再試行</span></div>
@@ -291,7 +292,8 @@ var THEMES = {
   '入庫':    ['#E1F1E9','#1F7A52'],
   '棚卸':    ['#FBEBD4','#B26A06'],
   'history': ['#FCF4D6','#856A09'],
-  'alerts':  ['#FBE3E1','#B4241E']
+  'alerts':  ['#FBE3E1','#B4241E'],
+  'stock':   ['#E2F0EE','#0E7C86']
 };
 function setTheme(key){
   var t = THEMES[key] || THEMES['使用'];
@@ -532,9 +534,11 @@ var listKind = 'history';
 function showList(kind){ listKind=kind; closeMenu(); pauseCam(); setTheme(kind); reloadList(); show('list'); }
 function reloadList(){
   var body = document.getElementById('list-body');
-  document.getElementById('list-title').textContent = (listKind==='history') ? '履歴' : '発注点アラート';
+  var titles = { history:'履歴', alerts:'発注点アラート', stock:'在庫一覧' };
+  document.getElementById('list-title').textContent = titles[listKind] || '一覧';
   body.innerHTML = '<div class="center" style="flex:1;display:flex;padding-top:40px;"><div class="spin"></div></div>';
   if (listKind==='history') api('history',{limit:30}).then(renderHistory).catch(function(e){body.textContent=e.message;});
+  else if (listKind==='stock') api('items',{}).then(renderStock).catch(function(e){body.textContent=e.message;});
   else api('alerts',{}).then(renderAlerts).catch(function(e){body.textContent=e.message;});
 }
 /* ===== アイコン（外部フォント非依存の内蔵SVG） ===== */
@@ -557,7 +561,8 @@ var SVGP = {
   'chevron-down':{m:'<path d="M6 9l6 6 6-6"/>',w:2.2},
   'backspace':{m:'<path d="M20 6H9L3 12l6 6h11a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1z"/><path d="M17 10l-4 4"/><path d="M13 10l4 4"/>',w:2},
   'tag':{m:'<circle cx="8" cy="8" r="1.2"/><path d="M3 6v5.2a2 2 0 0 0 .6 1.4l7.7 7.7a2.4 2.4 0 0 0 3.4 0l5.6-5.6a2.4 2.4 0 0 0 0-3.4l-7.7-7.7a2 2 0 0 0-1.4-.6H6a3 3 0 0 0-3 3z"/>',w:2},
-  'building-store':{m:'<path d="M3 21h18"/><path d="M3 7v1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1h-18l2-4h14l2 4"/><path d="M5 21v-10.15"/><path d="M19 21v-10.15"/><path d="M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"/>',w:2}
+  'building-store':{m:'<path d="M3 21h18"/><path d="M3 7v1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1m0 1a3 3 0 0 0 6 0v-1h-18l2-4h14l2 4"/><path d="M5 21v-10.15"/><path d="M19 21v-10.15"/><path d="M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"/>',w:2},
+  'search':{m:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.2-4.2"/>',w:2}
 };
 function svg(name, size){
   var d = SVGP[name] || SVGP['check']; size = size || 20;
@@ -664,6 +669,64 @@ function renderAlerts(rows){
         '<div class="num" style="font-weight:700;color:var(--bad);flex:none;min-width:24px;text-align:right;">'+r.stock+'</div>' +
       '</div>';
     }).join('') + '</div>';
+}
+
+/* ---------------- 在庫一覧 ---------------- */
+var stockRows = [], stockSort = 'id';
+function renderStock(rows){
+  stockRows = rows || [];
+  var body = document.getElementById('list-body');
+  body.innerHTML =
+    '<div style="position:sticky;top:0;z-index:2;background:var(--bg);margin:-16px -16px 12px;padding:12px 16px 6px;">' +
+      '<div style="display:flex;align-items:center;gap:8px;background:var(--card);border:0.5px solid var(--line);border-radius:10px;padding:8px 11px;">' +
+        '<span style="color:var(--ink2);display:inline-flex;">'+svg('search',16)+'</span>' +
+        '<input id="stock-q" type="text" inputmode="search" placeholder="品名・品目ID・型番・保管場所で検索" oninput="stockApply()" autocomplete="off" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:14px;font-family:inherit;color:var(--ink);">' +
+        '<span id="stock-clear" onclick="stockClear()" style="display:none;color:var(--ink2);cursor:pointer;">'+svg('x',16)+'</span>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:10px;margin:9px 2px 0;">' +
+        '<span id="stock-count" class="tiny muted" style="flex:1;"></span>' +
+        '<span id="stock-sort" onclick="stockToggleSort()" class="tiny" style="color:var(--accent-d);border:0.5px solid var(--accent-d);border-radius:999px;padding:3px 11px;cursor:pointer;opacity:.85;"></span>' +
+      '</div>' +
+    '</div>' +
+    '<div id="stock-rows"></div>';
+  stockSyncSortLabel();
+  stockApply();
+}
+function stockSyncSortLabel(){ var el=document.getElementById('stock-sort'); if(el) el.textContent = (stockSort==='low') ? '在庫が少ない順' : '品目ID順'; }
+function stockToggleSort(){ stockSort = (stockSort==='low') ? 'id' : 'low'; stockSyncSortLabel(); stockApply(); }
+function stockClear(){ var q=document.getElementById('stock-q'); if(q){ q.value=''; q.focus(); } stockApply(); }
+function stockApply(){
+  var qEl = document.getElementById('stock-q');
+  var q = ((qEl && qEl.value) || '').trim().toLowerCase();
+  var cl = document.getElementById('stock-clear'); if(cl) cl.style.display = q ? 'inline-flex' : 'none';
+  var list = stockRows.filter(function(r){
+    if(!q) return true;
+    return ((r.id||'')+' '+(r.name||'')+' '+(r.model||'')+' '+(r.location||'')).toLowerCase().indexOf(q) >= 0;
+  });
+  if(stockSort==='low') list.sort(function(a,b){ return (Number(a.stock)-Number(a.reorder)) - (Number(b.stock)-Number(b.reorder)); });
+  else list.sort(function(a,b){ return String(a.id).localeCompare(String(b.id),'ja',{numeric:true}); });
+  var cnt = document.getElementById('stock-count');
+  if(cnt) cnt.textContent = '表示 '+list.length+' ／ 全'+stockRows.length+'件';
+  var box = document.getElementById('stock-rows');
+  if(!box) return;
+  box.innerHTML = list.length
+    ? '<div class="card" style="padding:0;">' + list.map(stockRowHtml).join('') + '</div>'
+    : '<div class="muted center" style="padding-top:36px;">該当する品目がありません</div>';
+}
+function stockRowHtml(r){
+  var low = Number(r.stock) <= Number(r.reorder);
+  var id  = /^ITEM-/i.test(String(r.id||'')) ? r.id : ('ITEM-'+r.id);
+  var sub = [id, r.model, r.location].filter(function(x){ return x && String(x).trim(); }).map(esc).join(' · ');
+  var tag = r.active ? '' : ' <span style="font-size:10px;color:#fff;background:#9AA0A6;border-radius:4px;padding:1px 5px;vertical-align:1px;">廃番</span>';
+  var right = '<div style="font-size:18px;font-weight:700;color:'+(low?'var(--bad)':'var(--ink)')+';font-variant-numeric:tabular-nums;line-height:1;">'+fmt(r.stock)+'<span style="font-size:11px;font-weight:400;margin-left:2px;color:var(--ink2);">'+esc(r.unit||'')+'</span></div>' +
+    (low ? '<div style="font-size:10px;color:var(--bad);margin-top:3px;">発注点 '+fmt(r.reorder)+'</div>' : '');
+  return '<div class="list-row" style="padding:11px 14px;">' +
+    '<div style="flex:1;min-width:0;">' +
+      '<div class="sm" style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(r.name||'(名称なし)')+tag+'</div>' +
+      '<div class="tiny muted" style="margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+sub+'</div>' +
+    '</div>' +
+    '<div style="text-align:right;flex:none;margin-left:10px;">'+right+'</div>' +
+  '</div>';
 }
 
 /* ---------------- utils ---------------- */
